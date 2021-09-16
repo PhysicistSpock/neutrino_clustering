@@ -1,10 +1,14 @@
-# test comment
-# new line
-# only on main
-# from my laptop
+# arrays and data packages
+import numpy as np
+import pandas as pd
+import re
 
-import scipy
+# scipy packages
+import scipy as sp
 
-def plus_2(x):
-    y = x + 2
-    return y
+# plotting
+import matplotlib.pyplot as plt
+import matplotlib.colors as colors
+import matplotlib.ticker as ticker
+import matplotlib.patches as mpatches
+from mpl_toolkits.axes_grid1 import make_axes_locatable
