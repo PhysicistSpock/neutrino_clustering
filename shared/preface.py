@@ -4,7 +4,7 @@ import pandas as pd
 import re
 
 # scipy packages
-import scipy as sp
+from scipy.integrate import odeint
 
 # plotting
 import matplotlib.pyplot as plt
