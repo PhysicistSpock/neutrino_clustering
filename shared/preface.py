@@ -3,6 +3,8 @@ import numpy as np
 import pandas as pd
 import re
 
+import sympy as sympy
+
 # scipy packages
 from scipy.integrate import odeint
 
