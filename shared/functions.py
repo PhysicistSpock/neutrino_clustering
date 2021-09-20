@@ -33,7 +33,8 @@ def c_vir(z, M_vir):
     a_of_z = 0.537 + (1.025-0.537)*np.exp(-0.718*np.power(z, 1.08))
     b_of_z = -0.097 + 0.025*z
 
-    log10_c = a_of_z + b_of_z*np.log10(M_vir / (10**12 * h**-1 * myUnits.M_sun))
+    log10_c = a_of_z + \
+              b_of_z*np.log10(M_vir / (10**12 * myUnits.h**-1 * myUnits.M_sun))
     c = np.power(log10_c, 10)
 
     return c
@@ -98,35 +99,69 @@ def R_vir(z, M_vir):
     return R_vir
 
 
-def dPsi_dxi(x_i, rho_0, r_s, r, r_vir):
+def scale_radius(z, M_vir):
+    ...
     
+    r_s = R_vir(z, M_vir) / c_vir(z, M_vir)
+
+    return r_s
+
+
+def dPsi_dxi(x_i, z, rho_0, M_vir):
+    """Derivative of grav. potential w.r.t. any axis x_i.
+
+    Args:
+        x_i (array): spatial position vector
+        z (array): redshift
+        rho_0 (float): normalization
+        M_vir (float): virial mass
+
+    Returns:
+        array: Derivative vector of grav. potential. for all 3 spatial coords.
+    """    
+
+    # compute values dependent on redshift
+    r_vir = R_vir(z, M_vir)
+    r_s = r_vir / c_vir(z, M_vir)
     
-    m = np.minimum(r, r_vir)
-    M = np.maximum(r, r_vir)
+    # distance from halo center with current coords. x_i
+    r0 = np.sqrt(np.sum(x_i**2))
+
+    m = np.minimum(r0, r_vir)
+    # M = np.maximum(r0, r_vir)
 
     r = sympy.Symbol('r')
 
     prefactor = -4*np.pi*myUnits.G_Newton*rho_0*r_s**2
     term1 = np.log(1 + m/r_s) / (r/r_s)
-    term2 = r_vir/M / (1 + r_vir/r_s)
+    # term2 = r_vir/M / (1 + r_vir/r_s)
 
-    Psi = prefactor * (term1 - term2)
+    # term2 drops anyway when deriving w.r.t. r
+    Psi = prefactor * (term1)# - term2)
 
     # derivative w.r.t any axis x_i with chain rule
-    dPsi_dxi = sympy.diff(Psi, r)
+    dPsi_dxi = sympy.diff(Psi, r) * x_i / r0
 
     # fill in r values
-    fill_in_r_vals = sympy.lambdify(r, dPsi_dxi, 'numpy')
-    vals = fill_in_r_vals(np.ones(5))
+    fill_in_r = sympy.lambdify(r, dPsi_dxi, 'numpy')
+    derivative_value = fill_in_r(r0)
+
+    return derivative_value
 
 
+def EOMs(y, t, rho_0, M_vir):
 
-def EOMs(y, t, z):
+    #TODO sync z and t
+    z = np.linspace(0,4,len(t))
 
-    a = 1/(1+z)
-
+    # initialize vector
     x_i, u_i = y
-    dydt = np.array[u_i, -a**2 * dPsi_dxi(x_i)]
+
+    # derivative of grav. potential
+    derivative = dPsi_dxi(x_i, z, rho_0, M_vir)
+
+    # global minus sign for dydt array, s.t. calculation is backwards in time
+    dydt = -np.array([u_i, -(1+z)**-2 * derivative])
 
     return dydt
 
