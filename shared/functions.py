@@ -107,7 +107,22 @@ def scale_radius(z, M_vir):
     return r_s
 
 
-def dPsi_dxi(x_i, z, rho_0, M_vir):
+def s_of_z(z):
+
+    s = 2/myUnits.H_0/myUnits.Omega_m_0 * (1-np.sqrt(1+myUnits.Omega_m_0*z))
+
+    return s
+
+
+def z_of_s(s):
+
+    z = 1/myUnits.Omega_m_0 * \
+        ((1-(myUnits.H_0*myUnits.Omega_m_0/2*s))**2 - 1)
+
+    return z
+
+
+def dPsi_dxi_NFW(x_i, z, rho_0, M_vir):
     """Derivative of grav. potential w.r.t. any axis x_i.
 
     Args:
@@ -144,26 +159,28 @@ def dPsi_dxi(x_i, z, rho_0, M_vir):
 
     # fill in r values
     fill_in_r = sympy.lambdify(r, dPsi_dxi, 'numpy')
-    derivative_value = fill_in_r(r0)
+    derivative_vector = fill_in_r(r0)
 
-    return derivative_value
+    return np.array(derivative_vector)
 
 
-def EOMs(y, t, rho_0, M_vir):
-
-    #TODO sync z and t
-    z = np.linspace(0,4,len(t))
+def EOMs(y, s, rho_0, M_vir):
 
     # initialize vector
-    x_i, u_i = y
+    x_i, u_i = np.reshape(y, (2,3))
+
+    # convert time variable s to redshift
+    z = z_of_s(s)
 
     # derivative of grav. potential
-    derivative = dPsi_dxi(x_i, z, rho_0, M_vir)
+    derivative_vector = dPsi_dxi_NFW(x_i, z, rho_0, M_vir)
 
     # global minus sign for dydt array, s.t. calculation is backwards in time
-    dydt = -np.array([u_i, -(1+z)**-2 * derivative])
+    dydt = -np.array([u_i, -(1+z)**-2 * derivative_vector])
 
-    return dydt
+    # reshape from (2,3) to (6,), s.t. the vector is
+    # (x_1, x_2, x_3, u_1, u_2, u_3)
+    return np.reshape(dydt, 6)
 
 
 def Fermi_Dirac(p):

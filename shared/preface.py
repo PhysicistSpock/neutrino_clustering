@@ -6,7 +6,7 @@ import re
 import sympy as sympy
 
 # scipy packages
-from scipy.integrate import odeint
+from scipy.integrate import odeint, quad
 
 # plotting
 import matplotlib.pyplot as plt
