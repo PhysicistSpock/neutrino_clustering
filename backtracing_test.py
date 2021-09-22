@@ -73,6 +73,12 @@ next_ui = np.array([sol.y[3:6,-1]]).flatten()
 print(next_xi-x0)
 print(next_ui-u0)
 
+num_of_non_zeros = np.count_nonzero(next_ui-u0)
+if num_of_non_zeros == 0:
+    print('Array contains only 0')
+else:
+    print('Array has non-zero items')
+
 
 """
 # Fermi-Dirac value of final coords.
