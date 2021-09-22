@@ -3,10 +3,14 @@ import numpy as np
 import pandas as pd
 import re
 
+# speed improvement
+import numba as nb  # jit, njit, vectorize
+
+# symbolic integration
 import sympy as sympy
 
 # scipy packages
-from scipy.integrate import odeint, quad
+from scipy.integrate import solve_ivp, quad
 
 # plotting
 import matplotlib.pyplot as plt

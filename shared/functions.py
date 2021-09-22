@@ -15,7 +15,7 @@ def rho_NFW(r, rho_0, r_s):
 
     rho = rho_0 / (r/r_s) / np.power(1+(r/r_s), 2)
 
-    return rho / (unit.Msun/unit.kpc**3)
+    return np.array(rho) / (unit.Msun/unit.kpc**3)
 
 
 def c_vir(z, M_vir):
@@ -127,35 +127,25 @@ def scale_radius(z, M_vir):
 
 def s_of_z(z):
     """Convert redshift to time variable s with eqn. 4.1 in Mertsch et al.
-    (2020), assuming matter domination.
+    (2020), keeping only Omega_m0 and Omega_Lambda0 in the Hubble eqn. for H(z).
 
     Args:
-        z (array): redshift
+        z (float): redshift
 
     Returns:
-        array: time variable s (in [seconds] due to 1/H0 factor)
+        float: time variable s (in [seconds] due to 1/H0 factor)
     """    
 
-    s = 2/unit.H0/unit.Omega_m0 * (1-np.sqrt(1+unit.Omega_m0*z))
+    def s_integrand(z):
 
-    return s / unit.s
+        s_int = -1/unit.H0/np.sqrt((unit.Omega_m0*(1+z)**3 + unit.Omega_L0))
 
+        return s_int
 
-def z_of_s(s):
-    """Convert time variable s to redshift with eqn 4.1 in Mertsch et al. 
-    (2020), assuming matter domination.
+    s_of_z, _ = quad(s_integrand, 0, z)
 
-    Args:
-        s (array): time variable s as in eqn 4.1
+    return np.float64(s_of_z) / unit.s
 
-    Returns:
-        array: redshift [dimensionless]
-    """    
-
-    z = 1/unit.Omega_m0 * \
-        ((1-(unit.H0*unit.Omega_m0/2*s))**2 - 1)
-
-    return z
 
 
 def dPsi_dxi_NFW(x_i, z, rho_0, M_vir):
@@ -169,16 +159,17 @@ def dPsi_dxi_NFW(x_i, z, rho_0, M_vir):
 
     Returns:
         array: Derivative vector of grav. potential. for all 3 spatial coords.
+               with units of acceleration [kpc/s**2]
     """    
 
     # compute values dependent on redshift
-    r_vir = R_vir(z, M_vir)
-    r_s = r_vir / c_vir(z, M_vir)
+    r_vir = R_vir(z, M_vir)  # [kpc]
+    r_s = r_vir / c_vir(z, M_vir)  # [kpc]
     
     # distance from halo center with current coords. x_i
-    r0 = np.sqrt(np.sum(x_i**2))
+    r0 = np.sqrt(np.sum(x_i**2))  # [kpc]
 
-    m = np.minimum(r0, r_vir)
+    m = np.minimum(r0, r_vir)  # [kpc]
     # M = np.maximum(r0, r_vir)
 
     r = sympy.Symbol('r')
@@ -188,10 +179,10 @@ def dPsi_dxi_NFW(x_i, z, rho_0, M_vir):
     # term2 = r_vir/M / (1 + r_vir/r_s)
 
     # term2 drops anyway when deriving w.r.t. r
-    Psi = prefactor * (term1)# - term2)
+    Psi = prefactor * (term1)# - term2)  # ~[kpc**2/s**2]
 
     # derivative w.r.t any axis x_i with chain rule
-    dPsi_dxi = sympy.diff(Psi, r) * x_i / r0
+    dPsi_dxi = sympy.diff(Psi, r) * x_i / r0  # ~[kpc/s**2], i.e. acceleration
 
     # fill in r values
     fill_in_r = sympy.lambdify(r, dPsi_dxi, 'numpy')
@@ -199,26 +190,7 @@ def dPsi_dxi_NFW(x_i, z, rho_0, M_vir):
     
     # print('derivative values', derivative_vector)
 
-    return np.array(derivative_vector)
-
-
-def EOMs(y, s, rho_0, M_vir):
-
-    # initialize vector
-    x_i, u_i = np.reshape(y, (2,3))
-
-    # convert time variable s to redshift
-    z = z_of_s(s)
-
-    # derivative of grav. potential
-    derivative_vector = dPsi_dxi_NFW(x_i, z, rho_0, M_vir)
-
-    # global minus sign for dydt array, s.t. calculation is backwards in time
-    dydt = -np.array([u_i, -(1+z)**-2 * derivative_vector])
-
-    # reshape from (2,3) to (6,), s.t. the vector is
-    # (x_1, x_2, x_3, u_1, u_2, u_3)
-    return np.reshape(dydt, 6)
+    return np.array(derivative_vector) / (unit.kpc/unit.s**2)
 
 
 def Fermi_Dirac(p):
