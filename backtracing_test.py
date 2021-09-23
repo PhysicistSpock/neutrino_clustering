@@ -38,29 +38,15 @@ def EOMs(s, y, rho_0, M_vir):
     return np.reshape(dyds, 6)
 
 
-def backtrack_1_neutrino():
-    ...
+def backtrack_1_neutrino(y0_Nr):
+    global z_steps, s_steps
 
-if __name__ == '__main__':
-
-    #TODO: What is the coordinate origin? Is it w.r.t the NFW halo radius at the
-    #      position of earth?
-
-    x1, x2, x3 = 0, 0, 10.
-    u1, u2, u3 = 0., 0., 0.1
-
-    # initial spatial positions in [kpc] and velocities in [kpc/s]
-    Xunit, Uunit = unit.kpc, unit.kpc/unit.s
-    x0 = np.array([x1, x2, x3]) * Xunit
-    u0 = np.array([u1, u2, u3]) * Uunit
-
-    # combined inital vector
-    y0 = np.array([x0, u0]).flatten()
+    # Split input into initial vector and neutrino number
+    y0, Nr = y0_Nr[0:-1], y0_Nr[-1]
 
     # NFW halo parameters
     rho_0 = unit.rho0_NFW 
     M_vir = unit.Mvir_NFW
-
 
     # Redshifts to integrate over
     zeds = np.linspace(0,0.5,50)
@@ -90,8 +76,27 @@ if __name__ == '__main__':
         if zi == loop[-1]:
             sols.append(y0)
 
+    np.save(f'neutrino_vectors/nu_{int(Nr)}.npy', np.array(sols))
 
-    print('Solution array shape:', np.array(sols).shape)
+
+if __name__ == '__main__':
+
+    # Position of earth w.r.t Milky Way NFW halo center
+    x1, x2, x3 = 8.5, 8.5, 0.
+    
+    u1, u2, u3 = 0., 0., 0.1
+
+    # initial spatial positions in [kpc] and velocities in [kpc/s]
+    Xunit, Uunit = unit.kpc, unit.kpc/unit.s
+    x0 = np.array([x1, x2, x3]) * Xunit
+    u0 = np.array([u1, u2, u3]) * Uunit
+
+    # combined inital vector
+    y0 = np.array([x0, u0]).flatten()
+    y0_Nr = np.append(y0, 1)
+
+    backtrack_1_neutrino(y0_Nr)
+
 
     '''
     with np.printoptions(precision=12):
