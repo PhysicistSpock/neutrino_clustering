@@ -147,9 +147,8 @@ def s_of_z(z):
     return np.float64(s_of_z) / unit.s
 
 
-
 def dPsi_dxi_NFW(x_i, z, rho_0, M_vir):
-    """Derivative of grav. potential w.r.t. any axis x_i.
+    """Derivative of NFW grav. potential w.r.t. any axis x_i.
 
     Args:
         x_i (array): spatial position vector
@@ -170,16 +169,16 @@ def dPsi_dxi_NFW(x_i, z, rho_0, M_vir):
     r0 = np.sqrt(np.sum(x_i**2))  # [kpc]
 
     m = np.minimum(r0, r_vir)  # [kpc]
-    # M = np.maximum(r0, r_vir)
+    M = np.maximum(r0, r_vir)  # [kpc]
 
     r = sympy.Symbol('r')
 
     prefactor = -4*np.pi*unit.G*rho_0*r_s**2
     term1 = np.log(1 + m/r_s) / (r/r_s)
-    # term2 = r_vir/M / (1 + r_vir/r_s)
+    term2 = r_vir/M / (1 + r_vir/r_s)
 
     # term2 drops anyway when deriving w.r.t. r
-    Psi = prefactor * (term1)# - term2)  # ~[kpc**2/s**2]
+    Psi = prefactor * (term1 - term2)  # ~[kpc**2/s**2]
 
     # derivative w.r.t any axis x_i with chain rule
     dPsi_dxi = sympy.diff(Psi, r) * x_i / r0  # ~[kpc/s**2], i.e. acceleration
@@ -187,8 +186,6 @@ def dPsi_dxi_NFW(x_i, z, rho_0, M_vir):
     # fill in r values
     fill_in_r = sympy.lambdify(r, dPsi_dxi, 'numpy')
     derivative_vector = fill_in_r(r0)
-    
-    # print('derivative values', derivative_vector)
 
     return np.array(derivative_vector) / (unit.kpc/unit.s**2)
 
