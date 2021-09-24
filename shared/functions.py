@@ -182,6 +182,7 @@ def dPsi_dxi_NFW(x_i, z, rho_0, M_vir):
 
     # derivative w.r.t any axis x_i with chain rule
     dPsi_dxi = sympy.diff(Psi, r) * x_i / r0  # ~[kpc/s**2], i.e. acceleration
+    print('dPsi_dxi:', time.time()-start, 'seconds.')
 
     # fill in r values
     fill_in_r = sympy.lambdify(r, dPsi_dxi, 'numpy')

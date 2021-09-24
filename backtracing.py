@@ -1,7 +1,7 @@
+from numpy.random import random
 from shared.preface import *
 import shared.my_units as unit
 import shared.functions as fct
-start = time.time()
 
 
 def EOMs(s, y, rho_0, M_vir):
@@ -49,7 +49,7 @@ def backtrack_1_neutrino(y0_Nr):
     M_vir = unit.Mvir_NFW
 
     # Redshifts to integrate over
-    zeds = np.linspace(0,0.5,50)
+    zeds = np.linspace(0,0.5,10)
 
     # Array to store solutions
     sols = []
@@ -68,6 +68,9 @@ def backtrack_1_neutrino(y0_Nr):
 
         # Solve all 6 EOMs
         sol = solve_ivp(EOMs, s_steps, y0, args=(rho_0, M_vir))
+        
+        if zi in (0,1):
+            print('Solve EOMs:', time.time()-start, 'seconds.')
 
         # Overwrite current vector with new one (already has Xunit and Uunit).
         y0 = np.array([sol.y[0:3,-1], sol.y[3:6,-1]]).flatten()
@@ -77,45 +80,45 @@ def backtrack_1_neutrino(y0_Nr):
             sols.append(y0)
 
     np.save(f'neutrino_vectors/nu_{int(Nr)}.npy', np.array(sols))
-
+    # print(f'nu_{int(Nr)} vector:', np.array(sols)[-1])
 
 if __name__ == '__main__':
+    start = time.time()
+
+    # Initial spatial positions in [kpc] and velocities in [kpc/s]
+    Xunit, Uunit = unit.kpc, unit.kpc/unit.s
 
     # Position of earth w.r.t Milky Way NFW halo center
     x1, x2, x3 = 8.5, 8.5, 0.
-    
-    u1, u2, u3 = 0., 0., 0.1
-
-    # initial spatial positions in [kpc] and velocities in [kpc/s]
-    Xunit, Uunit = unit.kpc, unit.kpc/unit.s
     x0 = np.array([x1, x2, x3]) * Xunit
-    u0 = np.array([u1, u2, u3]) * Uunit
+    
+    # Random draws for velocities
+    ui_min, ui_max, ui_size = 0.1, 1., 1
+    ui = np.array([
+        np.random.default_rng().uniform(ui_min, ui_max, 3) 
+        for _ in range(ui_size)
+        ]) * Uunit
 
-    # combined inital vector
-    y0 = np.array([x0, u0]).flatten()
-    y0_Nr = np.append(y0, 1)
-
-    backtrack_1_neutrino(y0_Nr)
-
-
-    '''
-    with np.printoptions(precision=12):
-
-        change_xi = (new_xi-x0) / Xunit
-        print('change_xi:', change_xi)
-
-        change_ui = (new_ui-u0) / (unit.m/unit.s)
-        print('change_ui', change_ui, 'new_ui:', new_ui/Uunit)
-    '''
+    # Combine vectors and append neutrino particle number
+    y0_Nr = np.array([np.concatenate((x0,ui[i],[i+1])) for i in range(ui_size)])
 
 
+    with ThreadPoolExecutor(os.cpu_count()*2) as ex:
+        ex.map(backtrack_1_neutrino, y0_Nr)  
 
-    """
-    # Fermi-Dirac value of final coords.
-    m_nu = 1  # neutrino mass
-    u_mu = np.sum(new_ui**2)
-    p_nu = m_nu * u_mu
-    FDval = fct.Fermi_Dirac(p_nu)
-    """
+    #
+    ### Calculate number density
+    #
+
+    m_nu = 1.  # neutrino mass
+    n_nu = 0.
+    for Nr in range(ui_size):
+        ui = np.load(f'neutrino_vectors/nu_{int(Nr+1)}.npy')[-1][3:6]
+        pi = np.sum(ui**2) * m_nu
+
+        n_nu += fct.number_density(pi)
+    
+    print(n_nu)
+
 
     print('Execution time:', time.time()-start, 'seconds.')

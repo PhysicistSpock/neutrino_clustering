@@ -38,7 +38,7 @@ if use_units == 'normal':
     # Temperature
     K         = 1.380649e-23*J             # Kelvin
     kb        = 1.                         # Boltzmann constant
-    Tnu       = 1.95*K                     # Relic neutrino temp. today
+    T_nu      = 1.95*K                     # Relic neutrino temp. today
 
     # Cosmology
     Omega_m0  = 0.3111                     # Matter-energy density today
@@ -89,7 +89,7 @@ else:
     # Temperature
     K         = 1.
     kb        = 1.
-    Tnu       = 1.
+    T_nu      = 1.
 
     # Cosmology
     Omega_m0  = 1.

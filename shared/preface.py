@@ -9,6 +9,7 @@ import re
 
 # speed improvement
 import numba as nb  # jit, njit, vectorize
+from concurrent.futures import ThreadPoolExecutor
 
 # symbolic integration
 import sympy as sympy
