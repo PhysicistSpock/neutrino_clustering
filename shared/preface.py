@@ -1,3 +1,7 @@
+import sys, os
+from datetime import datetime
+import time
+
 # arrays and data packages
 import numpy as np
 import pandas as pd
@@ -5,6 +9,7 @@ import re
 
 # speed improvement
 import numba as nb  # jit, njit, vectorize
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 
 # symbolic integration
 import sympy as sympy
