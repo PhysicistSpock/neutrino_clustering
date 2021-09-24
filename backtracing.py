@@ -49,7 +49,7 @@ def backtrack_1_neutrino(y0_Nr):
     M_vir = unit.Mvir_NFW
 
     # Redshifts to integrate over
-    zeds = np.linspace(0,0.5,10)
+    zeds = np.linspace(0,0.5,50)
 
     # Array to store solutions
     sols = []
@@ -69,8 +69,8 @@ def backtrack_1_neutrino(y0_Nr):
         # Solve all 6 EOMs
         sol = solve_ivp(EOMs, s_steps, y0, args=(rho_0, M_vir))
         
-        if zi in (0,1):
-            print('Solve EOMs:', time.time()-start, 'seconds.')
+        # if zi in (0,1):
+        #     print('Solve EOMs:', time.time()-start, 'seconds.')
 
         # Overwrite current vector with new one (already has Xunit and Uunit).
         y0 = np.array([sol.y[0:3,-1], sol.y[3:6,-1]]).flatten()
@@ -93,7 +93,7 @@ if __name__ == '__main__':
     x0 = np.array([x1, x2, x3]) * Xunit
     
     # Random draws for velocities
-    ui_min, ui_max, ui_size = 0.1, 1., 1
+    ui_min, ui_max, ui_size = 0.1, 1., 50
     ui = np.array([
         np.random.default_rng().uniform(ui_min, ui_max, 3) 
         for _ in range(ui_size)
@@ -103,7 +103,7 @@ if __name__ == '__main__':
     y0_Nr = np.array([np.concatenate((x0,ui[i],[i+1])) for i in range(ui_size)])
 
 
-    with ThreadPoolExecutor(os.cpu_count()*2) as ex:
+    with ProcessPoolExecutor(8*2) as ex:
         ex.map(backtrack_1_neutrino, y0_Nr)  
 
     #
@@ -113,10 +113,12 @@ if __name__ == '__main__':
     m_nu = 1.  # neutrino mass
     n_nu = 0.
     for Nr in range(ui_size):
-        ui = np.load(f'neutrino_vectors/nu_{int(Nr+1)}.npy')[-1][3:6]
-        pi = np.sum(ui**2) * m_nu
+        u0 = np.load(f'neutrino_vectors/nu_{int(Nr+1)}.npy')[0][3:6]
+        u_back = np.load(f'neutrino_vectors/nu_{int(Nr+1)}.npy')[-1][3:6]
+        p0 = np.sum(u0**2) * m_nu
+        p_back = np.sum(u_back**2) * m_nu
 
-        n_nu += fct.number_density(pi)
+        n_nu += fct.number_density(p0, p_back)
     
     print(n_nu)
 

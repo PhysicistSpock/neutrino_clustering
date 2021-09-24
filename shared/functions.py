@@ -1,5 +1,6 @@
 from shared.preface import *
 import shared.my_units as unit
+# start = time.time()
 
 def rho_NFW(r, rho_0, r_s):
     """NFW density profile.
@@ -182,7 +183,6 @@ def dPsi_dxi_NFW(x_i, z, rho_0, M_vir):
 
     # derivative w.r.t any axis x_i with chain rule
     dPsi_dxi = sympy.diff(Psi, r) * x_i / r0  # ~[kpc/s**2], i.e. acceleration
-    print('dPsi_dxi:', time.time()-start, 'seconds.')
 
     # fill in r values
     fill_in_r = sympy.lambdify(r, dPsi_dxi, 'numpy')
@@ -198,8 +198,8 @@ def Fermi_Dirac(p):
     return f_of_p
 
 
-def number_density(p):
+def number_density(p0, p_back):
 
-    n = np.sum(p * Fermi_Dirac(p))
+    n = np.sum(p0 * Fermi_Dirac(p_back))
 
     return n
