@@ -21,8 +21,6 @@ def EOMs(s, y, rho_0, M_vir):
     else:
         z = np.array([z_for_between_s_steps])
 
-    #TODO: explore interpolation function for in between zeds
-
     # derivative of grav. potential in [kpc/s**2]
     derivative_vector = fct.dPsi_dxi_NFW(x_i, z[0], rho_0, M_vir)
 

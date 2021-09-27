@@ -7,6 +7,9 @@ import numpy as np
 import pandas as pd
 import re
 
+# astrophysics
+from astropy import units as unit
+
 # speed improvement
 import numba as nb  # jit, njit, vectorize
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor

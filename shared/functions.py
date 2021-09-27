@@ -1,6 +1,5 @@
 from shared.preface import *
-import shared.my_units as unit
-# start = time.time()
+import shared.my_units as my_unit
 
 def rho_NFW(r, rho_0, r_s):
     """NFW density profile.
