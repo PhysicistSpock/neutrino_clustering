@@ -16,6 +16,7 @@ import sympy as sympy
 
 # scipy packages
 from scipy.integrate import solve_ivp, quad
+from scipy.special import expit
 
 # plotting
 import matplotlib.pyplot as plt

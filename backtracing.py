@@ -49,7 +49,7 @@ def backtrack_1_neutrino(y0_Nr):
     M_vir = unit.Mvir_NFW
 
     # Redshifts to integrate over
-    zeds = np.linspace(0,0.5,50)
+    zeds = np.linspace(0,0.5,10)
 
     # Array to store solutions
     sols = []
@@ -93,7 +93,7 @@ if __name__ == '__main__':
     x0 = np.array([x1, x2, x3]) * Xunit
     
     # Random draws for velocities
-    ui_min, ui_max, ui_size = 0.1, 1., 50
+    ui_min, ui_max, ui_size = 0.1, 1., 10  # last number is amount of neutrinos
     ui = np.array([
         np.random.default_rng().uniform(ui_min, ui_max, 3) 
         for _ in range(ui_size)
@@ -103,15 +103,18 @@ if __name__ == '__main__':
     y0_Nr = np.array([np.concatenate((x0,ui[i],[i+1])) for i in range(ui_size)])
 
 
-    with ProcessPoolExecutor(8*2) as ex:
-        ex.map(backtrack_1_neutrino, y0_Nr)  
+    backtrack_1_neutrino(y0_Nr[0])
+
+    # Processes = 1
+    # with ProcessPoolExecutor(Processes) as ex:
+    #     ex.map(backtrack_1_neutrino, y0_Nr)  
 
     #
     ### Calculate number density
     #
 
-    m_nu = 1.  # neutrino mass
-    n_nu = 0.
+    m_nu = 1. * unit.eV  # neutrino mass
+    n_nu = 0.  # "first" neutrino desnity value, each loop adds to it.
     for Nr in range(ui_size):
         u0 = np.load(f'neutrino_vectors/nu_{int(Nr+1)}.npy')[0][3:6]
         u_back = np.load(f'neutrino_vectors/nu_{int(Nr+1)}.npy')[-1][3:6]
@@ -119,8 +122,9 @@ if __name__ == '__main__':
         p_back = np.sum(u_back**2) * m_nu
 
         n_nu += fct.number_density(p0, p_back)
-    
-    print(n_nu)
+        print('Number density:', fct.number_density(p0, p_back))
+
+    print('Final number density:', n_nu)
 
 
     print('Execution time:', time.time()-start, 'seconds.')

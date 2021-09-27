@@ -1,6 +1,6 @@
 from shared.preface import *
 
-use_units = 'test'
+use_units = 'normal'
 
 if use_units == 'normal':
     # Energy 

@@ -203,7 +203,11 @@ def Fermi_Dirac(p, m=0.):
         array: Value of Fermi-Dirac distr. at p.
     """    
 
+    # with numpy, trouble with overflow
     f_of_p = 1 / (np.exp(np.sqrt(p**2+m**2)/unit.T_nu) + 1)
+
+    # with scipy
+    # f_of_p = expit(-np.sqrt(p**2+m**2)/unit.T_nu)
 
     return f_of_p
 
@@ -223,4 +227,4 @@ def number_density(p0, p_back):
 
     n = 1/(2*np.pi**2) * np.sum(p0**2 * Fermi_Dirac(p_back))
 
-    return n
+    return n / unit.cm**3
