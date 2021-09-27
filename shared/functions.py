@@ -191,15 +191,36 @@ def dPsi_dxi_NFW(x_i, z, rho_0, M_vir):
     return np.array(derivative_vector) / (unit.kpc/unit.s**2)
 
 
-def Fermi_Dirac(p):
+def Fermi_Dirac(p, m=0.):
+    """Fermi-Dirac phase-space distribution for neutrinos with 
+    zero chem. potential and temp. T_nu (CNB temp. today).
 
-    f_of_p = 1 / (np.exp(p/unit.T_nu) + 1)
+    Args:
+        p (array): magnitude of momentum
+        m (float): mass of particle species
+
+    Returns:
+        array: Value of Fermi-Dirac distr. at p.
+    """    
+
+    f_of_p = 1 / (np.exp(np.sqrt(p**2+m**2)/unit.T_nu) + 1)
 
     return f_of_p
 
 
 def number_density(p0, p_back):
+    """Neutrino number density obtained by integration over initial momenta.
 
-    n = np.sum(p0 * Fermi_Dirac(p_back))
+    Args:
+        p0 (array): neutrino momentum today
+        p_back (array): neutrino momentum at z_back (final redshift in sim.) 
+
+    Returns:
+        array: Value of relic neutrino number density.
+    """    
+
+    g = 1  # 6 degrees of freedom: flavour and particle/anti-particle ?
+
+    n = 1/(2*np.pi**2) * np.sum(p0**2 * Fermi_Dirac(p_back))
 
     return n
