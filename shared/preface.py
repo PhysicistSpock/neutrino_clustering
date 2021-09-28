@@ -9,6 +9,7 @@ import re
 
 # astrophysics
 from astropy import units as unit
+from astropy import constants as const
 
 # speed improvement
 import numba as nb  # jit, njit, vectorize
