@@ -222,6 +222,8 @@ def Fermi_Dirac(p, m=0.):
     """    
 
     # with numpy, trouble with overflow
+    #TODO: ratio in exponent has to be dimensionless, introduce const.k_B
+    # multiplying my.T_nu, introduce c's in p**2+m**2
     f_of_p = 1 / (np.exp(np.sqrt(p**2+m**2)/my.T_nu) + 1)
 
     # with scipy
@@ -243,6 +245,7 @@ def number_density(p0, p_back):
 
     g = 1  # 6 degrees of freedom: flavour and particle/anti-particle ?
 
+    #TODO: there are hidden units/constants here, ultimately we want /cm**3.
     n = 1/(2*np.pi**2) * np.sum(p0**2 * Fermi_Dirac(p_back))
 
     return n / unit.cm**3
