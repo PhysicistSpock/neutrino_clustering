@@ -1,5 +1,5 @@
 from shared.preface import *
-import shared.my_units as my_unit
+import shared.my_units as my
 
 def rho_NFW(r, rho_0, r_s):
     """NFW density profile.
@@ -10,12 +10,12 @@ def rho_NFW(r, rho_0, r_s):
         r_s (array): scale radius
 
     Returns:
-        array: density at radius r [Msun/kpc**3]
+        array: density at radius r in [Msun/kpc**3]
     """    
 
     rho = rho_0 / (r/r_s) / np.power(1+(r/r_s), 2)
 
-    return np.array(rho) / (unit.Msun/unit.kpc**3)
+    return rho.to(unit.M_sun/unit.kpc**3)
 
 
 def c_vir(z, M_vir):
@@ -35,9 +35,16 @@ def c_vir(z, M_vir):
     a_of_z = 0.537 + (1.025-0.537)*np.exp(-0.718*np.power(z, 1.08))
     b_of_z = -0.097 + 0.025*z
 
-    log10_c = a_of_z + \
-              b_of_z*np.log10(M_vir / (10**12 * unit.h**-1 * unit.Msun))
-    c = np.power(log10_c, 10)
+    log10_beta_c = a_of_z + \
+                   b_of_z*np.log10(M_vir / (1e12 * my.h**-1 * unit.M_sun))
+
+    beta_c = np.power(log10_beta_c, 10)
+
+    # beta factor calculated by using their values for scale and virial radius
+    # in Table 1.
+    beta = 333.5/19.9/beta_c
+
+    c = beta_c*beta
 
     return c
 
@@ -54,15 +61,15 @@ def rho_crit(z):
         array: critical density at redshift z [Msun/kpc**3]
     """    
     
-    H = np.sqrt(1+unit.Omega_m0*z) * (1+z) * unit.H0
-    rho_crit = 3*H**2 / (8*np.pi*unit.G)
+    H = np.sqrt(1+my.Omega_m0*z) * (1+z) * my.H0
+    rho_crit = 3*H**2 / (8*np.pi*const.G)
 
-    return rho_crit / (unit.Msun/unit.kpc**3)
+    return rho_crit.to(unit.M_sun/unit.kpc**3)
 
 
 def Omega_m(z):
     """Matter density parameter as a function of redshift, assuming matter
-    domination, only Omega_m and Omega_k in Friedmann equation. See notes
+    domination, only Omega_m and Omega_Lambda in Friedmann equation. See notes
     for derivation.
 
     Args:
@@ -72,10 +79,7 @@ def Omega_m(z):
         array: matter density parameter at redshift z [dimensionless]
     """    
 
-    o = unit.Omega_m0
-    Omega_m = o*(1+z) / (1+o*z)
-
-    return Omega_m
+    return np.float64((my.Omega_m0*(1+z)**3) / (1 + my.Omega_m0*((1+z)**3-1)))
 
 
 def Delta_vir(z):
@@ -106,7 +110,7 @@ def R_vir(z, M_vir):
 
     R_vir = np.power(3*M_vir / (4*np.pi*Delta_vir(z)*rho_crit(z)), 1/3)
 
-    return R_vir / unit.kpc
+    return R_vir.to(unit.kpc)
 
 
 def scale_radius(z, M_vir):
@@ -122,7 +126,7 @@ def scale_radius(z, M_vir):
     
     r_s = R_vir(z, M_vir) / c_vir(z, M_vir)
 
-    return r_s / unit.kpc
+    return r_s.to(unit.kpc)
 
 
 def s_of_z(z):
@@ -138,13 +142,16 @@ def s_of_z(z):
 
     def s_integrand(z):
 
-        s_int = -1/unit.H0/np.sqrt((unit.Omega_m0*(1+z)**3 + unit.Omega_L0))
+        # original H0 in units ~[1/s], we only need the value
+        H0 = my.H0.to(unit.s**-1).value
+
+        s_int = -1/H0/np.sqrt((my.Omega_m0*(1+z)**3 + my.Omega_L0))
 
         return s_int
 
     s_of_z, _ = quad(s_integrand, 0, z)
 
-    return np.float64(s_of_z) / unit.s
+    return np.float64(s_of_z)
 
 
 def dPsi_dxi_NFW(x_i, z, rho_0, M_vir):
@@ -158,36 +165,48 @@ def dPsi_dxi_NFW(x_i, z, rho_0, M_vir):
 
     Returns:
         array: Derivative vector of grav. potential. for all 3 spatial coords.
-               with units of acceleration [kpc/s**2]
+               with units of acceleration
     """    
 
     # compute values dependent on redshift
-    r_vir = R_vir(z, M_vir)  # [kpc]
-    r_s = r_vir / c_vir(z, M_vir)  # [kpc]
+    r_vir = R_vir(z, M_vir)
+    r_s = r_vir / c_vir(z, M_vir)
     
     # distance from halo center with current coords. x_i
-    r0 = np.sqrt(np.sum(x_i**2))  # [kpc]
+    r0 = np.sqrt(np.sum(x_i**2))
 
-    m = np.minimum(r0, r_vir)  # [kpc]
-    M = np.maximum(r0, r_vir)  # [kpc]
+    ### This is for the whole expression as in eqn. (A.5) and using sympy
+    # region
 
-    r = sympy.Symbol('r')
+    # m = np.minimum(r0, r_vir)
+    # M = np.maximum(r0, r_vir)
 
-    prefactor = -4*np.pi*unit.G*rho_0*r_s**2
-    term1 = np.log(1 + m/r_s) / (r/r_s)
-    term2 = r_vir/M / (1 + r_vir/r_s)
+    # r = sympy.Symbol('r')
 
-    # term2 drops anyway when deriving w.r.t. r
-    Psi = prefactor * (term1 - term2)  # ~[kpc**2/s**2]
+    # prefactor = -4*np.pi*unit.G*rho_0*r_s**2
+    # term1 = np.log(1 + m/r_s) / (r/r_s)
+    # term2 = r_vir/M / (1 + r_vir/r_s)
+    # Psi = prefactor * (term1 - term2)
 
-    # derivative w.r.t any axis x_i with chain rule
-    dPsi_dxi = sympy.diff(Psi, r) * x_i / r0  # ~[kpc/s**2], i.e. acceleration
+    ## derivative w.r.t any axis x_i with chain rule
+    # dPsi_dxi = sympy.diff(Psi, r) * x_i / r0
 
-    # fill in r values
-    fill_in_r = sympy.lambdify(r, dPsi_dxi, 'numpy')
-    derivative_vector = fill_in_r(r0)
+    ## fill in r values
+    # fill_in_r = sympy.lambdify(r, dPsi_dxi, 'numpy')
+    # derivative_vector = fill_in_r(r0)
 
-    return np.array(derivative_vector) / (unit.kpc/unit.s**2)
+    # endregion
+
+    m = np.minimum(r0, r_vir)
+
+    # ratio has to be unitless, otherwise np.log yields 0.
+    ratio = m.value/r_s.value
+
+    prefactor = -4*np.pi*const.G*rho_0*r_s**2 * np.log(1+(ratio)) * r_s
+    derivative = prefactor / r0**2
+    derivative_vector = derivative * x_i/r0
+
+    return derivative_vector.to(unit.kpc/unit.s**2)
 
 
 def Fermi_Dirac(p, m=0.):
@@ -203,7 +222,7 @@ def Fermi_Dirac(p, m=0.):
     """    
 
     # with numpy, trouble with overflow
-    f_of_p = 1 / (np.exp(np.sqrt(p**2+m**2)/unit.T_nu) + 1)
+    f_of_p = 1 / (np.exp(np.sqrt(p**2+m**2)/my.T_nu) + 1)
 
     # with scipy
     # f_of_p = expit(-np.sqrt(p**2+m**2)/unit.T_nu)
