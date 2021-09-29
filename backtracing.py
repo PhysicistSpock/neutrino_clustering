@@ -36,7 +36,7 @@ def backtrack_1_neutrino(y0_Nr):
     """Simulate trajectory of 1 neutrino."""
 
     #! Redshift start, redshift to integrate back to, redshift amount of steps
-    z_start, z_stop, z_amount = 0, 0.5, 50
+    z_start, z_stop, z_amount = 0, 0.5, 5
 
     global z_steps, s_steps  # other functions can use these variables
 
@@ -79,7 +79,7 @@ if __name__ == '__main__':
     start = time.time()
 
     #! Amount of neutrinos to simulate
-    neutrinos = 1
+    neutrinos = 2
 
     # Position of earth w.r.t Milky Way NFW halo center
     x1, x2, x3 = 8.5, 8.5, 0.
@@ -109,23 +109,29 @@ if __name__ == '__main__':
     m_nu = 0.05 * unit.eV  # in natural units
     m_nu_kg = m_nu.to(unit.kg, unit.mass_energy())  # in SI units
 
-    n_nu = 0.  # "first" neutrino density value, each loop adds to it.
+    p0s, p_backs = np.zeros(neutrinos), np.zeros(neutrinos)
     for Nr in range(neutrinos):
         
         # load initial velocity -> momentum today
         u0 = np.load(f'neutrino_vectors/nu_{int(Nr+1)}.npy')[0][3:6]
-        p0 = np.sqrt(np.sum(u0**2))*my.Uunit * m_nu_kg
+        p0 = np.sqrt(np.sum(u0**2)) * m_nu_kg.value
+        p0s[Nr] = p0
 
         # load "last" velocity -> momentum at z_back
         u_back = np.load(f'neutrino_vectors/nu_{int(Nr+1)}.npy')[-1][3:6]
-        p_back = np.sqrt(np.sum(u_back**2))*my.Uunit * m_nu_kg
+        p_back = np.sqrt(np.sum(u_back**2)) * m_nu_kg.value
+        p_backs[Nr] = p_back
 
-        #NOTE: Momenta p0 and p_back now have units [kg*kpc/s] attached.
 
-        n_nu += fct.number_density(p0, p_back, m_nu)
-        # print('Number density:', fct.number_density(p0, p_back))
+    #NOTE: Attach units [kg*kpc/s] to p0s and p_backs.
+    p_unit = unit.kg*unit.kpc/unit.s
+    p0s, p_backs = p0s*p_unit, p_backs*p_unit
 
-    # print('Final number density:', n_nu)
+    n_nu = fct.number_density(p0s, p_backs, m_nu)
+    # print('Number density:', fct.number_density(p0, p_back))
+
+
+    print('Final number density:', n_nu)
 
 
     print('Execution time:', time.time()-start, 'seconds.')

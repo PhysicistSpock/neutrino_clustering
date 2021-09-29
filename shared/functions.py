@@ -222,15 +222,16 @@ def Fermi_Dirac(p, m):
     """
 
     # convert input to match other constants (c, k_B) and take value
-    p = p.to(unit.kg*unit.m/unit.s).value
+    p = p.to(unit.kg*unit.m/unit.s)
     m = m.to(unit.kg, unit.mass_energy())
 
     # Plug into Fermi-Dirac distribution
     arg_of_exp = np.sqrt(p**2*const.c**2+m**2*const.c**4)/(const.k_B*my.T_nu)
-    f_of_p = 1 / (np.exp(arg_of_exp.value) + 1)
-
+    # f_of_p = 1 / (np.exp(arg_of_exp.value) + 1)
+    
     # with scipy
-    # f_of_p = expit(-np.sqrt(p**2+m**2)/unit.T_nu)
+    f_of_p = expit(-arg_of_exp.value)
+    print('Fermi-Dirac values:', f_of_p)
 
     return f_of_p
 
@@ -249,11 +250,27 @@ def number_density(p0, p_back, m):
     g = 1  #? 6 degrees of freedom: flavour and particle/anti-particle
 
     # sort p0 and p_back together (based on p0)
-    p0, p_back = (list(t) for t in zip(*sorted(zip(p0, p_back))))
-    p0, p_back = np.array([p0]), np.array([p_back])
+    p_unit = p0.unit
+    p0, p_back = p0.value, p_back.value
+    record = np.rec.fromarrays([p0, p_back])
+    record.sort
+    p0, p_back = record.f0*p_unit, record.f1*p_unit
+
+    # precomputed factors
+    const = g/(2*np.pi**2)
+    FDvals = Fermi_Dirac(p_back, m)
+
+    # convert momentum from kg*kpc/s to eV
+    to_eV = 1/(5.3442883e-28)
+    p0 = p0.to(unit.kg*unit.m/unit.s).value * to_eV
 
     #NOTE: n ~ integral dp p**2 f(p), the units come from dp p**2, which have
     #NOTE: eV*3 = 1/eV**-3 ~ 1/length**3
-    n = g/(2*np.pi**2) * np.trapz(p0**2 * Fermi_Dirac(p_back, m), p0)
+    n = const * np.trapz(p0**2 * FDvals, p0)
 
-    return n
+    # convert n from eV**3 to 1/cm**3
+    ev_m3 = 1/(1.9732705e-7)
+    n_m3 = n * ev_m3**3 * (1/unit.m**3)
+    n_cm3 = n_m3.to(1/unit.cm**3)
+
+    return n_cm3
