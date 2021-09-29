@@ -199,7 +199,7 @@ def dPsi_dxi_NFW(x_i, z, rho_0, M_vir):
 
     m = np.minimum(r0, r_vir)
 
-    # ratio has to be unitless, otherwise np.log yields 0.
+    #NOTE ratio has to be unitless, otherwise np.log yields 0.
     ratio = m.value/r_s.value
 
     prefactor = -4*np.pi*const.G*rho_0*r_s**2 * np.log(1+(ratio)) * r_s
@@ -209,7 +209,7 @@ def dPsi_dxi_NFW(x_i, z, rho_0, M_vir):
     return derivative_vector.to(unit.kpc/unit.s**2)
 
 
-def Fermi_Dirac(p, m=0.):
+def Fermi_Dirac(p, m):
     """Fermi-Dirac phase-space distribution for neutrinos with 
     zero chem. potential and temp. T_nu (CNB temp. today).
 
@@ -219,12 +219,15 @@ def Fermi_Dirac(p, m=0.):
 
     Returns:
         array: Value of Fermi-Dirac distr. at p.
-    """    
+    """
 
-    # with numpy, trouble with overflow
-    #TODO: ratio in exponent has to be dimensionless, introduce const.k_B
-    # multiplying my.T_nu, introduce c's in p**2+m**2
-    f_of_p = 1 / (np.exp(np.sqrt(p**2+m**2)/my.T_nu) + 1)
+    # convert input to match other constants (c, k_B) and take value
+    p = p.to(unit.kg*unit.m/unit.s).value
+    m = m.to(unit.kg, unit.mass_energy())
+
+    # Plug into Fermi-Dirac distribution
+    arg_of_exp = np.sqrt(p**2*const.c**2+m**2*const.c**4)/(const.k_B*my.T_nu)
+    f_of_p = 1 / (np.exp(arg_of_exp.value) + 1)
 
     # with scipy
     # f_of_p = expit(-np.sqrt(p**2+m**2)/unit.T_nu)
@@ -232,7 +235,7 @@ def Fermi_Dirac(p, m=0.):
     return f_of_p
 
 
-def number_density(p0, p_back):
+def number_density(p0, p_back, m):
     """Neutrino number density obtained by integration over initial momenta.
 
     Args:
@@ -243,9 +246,14 @@ def number_density(p0, p_back):
         array: Value of relic neutrino number density.
     """    
 
-    g = 1  # 6 degrees of freedom: flavour and particle/anti-particle ?
+    g = 1  #? 6 degrees of freedom: flavour and particle/anti-particle
 
-    #TODO: there are hidden units/constants here, ultimately we want /cm**3.
-    n = 1/(2*np.pi**2) * np.sum(p0**2 * Fermi_Dirac(p_back))
+    # sort p0 and p_back together (based on p0)
+    p0, p_back = (list(t) for t in zip(*sorted(zip(p0, p_back))))
+    p0, p_back = np.array([p0]), np.array([p_back])
 
-    return n / unit.cm**3
+    #NOTE: n ~ integral dp p**2 f(p), the units come from dp p**2, which have
+    #NOTE: eV*3 = 1/eV**-3 ~ 1/length**3
+    n = g/(2*np.pi**2) * np.trapz(p0**2 * Fermi_Dirac(p_back, m), p0)
+
+    return n
