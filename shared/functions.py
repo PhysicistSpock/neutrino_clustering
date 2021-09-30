@@ -1,3 +1,4 @@
+from astropy.units import equivalencies
 from shared.preface import *
 import shared.my_units as my
 
@@ -144,8 +145,10 @@ def s_of_z(z):
 
         # original H0 in units ~[1/s], we only need the value
         H0 = my.H0.to(unit.s**-1).value
+        #! H0 makes value of s very large and code slower.
+        #? leaving it out makes no difference in results, why?
 
-        s_int = -1/H0/np.sqrt((my.Omega_m0*(1+z)**3 + my.Omega_L0))
+        s_int = -1/np.sqrt((my.Omega_m0*(1+z)**3 + my.Omega_L0))
 
         return s_int
 
@@ -209,39 +212,40 @@ def dPsi_dxi_NFW(x_i, z, rho_0, M_vir):
     return derivative_vector.to(unit.kpc/unit.s**2)
 
 
-def Fermi_Dirac(p, m):
-    """Fermi-Dirac phase-space distribution for neutrinos with 
-    zero chem. potential and temp. T_nu (CNB temp. today).
+def Fermi_Dirac(p, m_nu):
+    """Fermi-Dirac phase-space distribution for CNB neutrinos. 
+    
+    Zero chem. potential and temp. T_nu (CNB temp. today). This distribution
+    is for relativistic neutrinos
 
     Args:
         p (array): magnitude of momentum
-        m (float): mass of particle species
+        m_nu (float): mass of particle species
 
     Returns:
         array: Value of Fermi-Dirac distr. at p.
     """
 
-    # convert input to match other constants (c, k_B) and take value
-    p = p.to(unit.kg*unit.m/unit.s)
-    m = m.to(unit.kg, unit.mass_energy())
+    # convert momentum from kg*kpc/s to eV
+    to_eV = 1/(5.3442883e-28)
+    p = p.to(unit.kg*unit.m/unit.s).value * to_eV * unit.eV
 
     # Plug into Fermi-Dirac distribution
-    arg_of_exp = np.sqrt(p**2*const.c**2+m**2*const.c**4)/(const.k_B*my.T_nu)
-    # f_of_p = 1 / (np.exp(arg_of_exp.value) + 1)
-    
-    # with scipy
-    f_of_p = expit(-arg_of_exp.value)
-    print('Fermi-Dirac values:', f_of_p)
+    m_nu = 0.*unit.eV  #? not sure if we need mass
+    T_in_eV = my.T_nu.to(unit.eV, unit.temperature_energy())
+    arg_of_exp = np.sqrt(p**2+m_nu**2)/T_in_eV
+    f_of_p = 1 / (np.exp(arg_of_exp.value) + 1)
 
     return f_of_p
 
 
-def number_density(p0, p_back, m):
+def number_density(p0, p_back, m_nu):
     """Neutrino number density obtained by integration over initial momenta.
 
     Args:
         p0 (array): neutrino momentum today
-        p_back (array): neutrino momentum at z_back (final redshift in sim.) 
+        p_back (array): neutrino momentum at z_back (final redshift in sim.)
+        m_nu (float): mass of particle species
 
     Returns:
         array: Value of relic neutrino number density.
@@ -258,7 +262,7 @@ def number_density(p0, p_back, m):
 
     # precomputed factors
     const = g/(2*np.pi**2)
-    FDvals = Fermi_Dirac(p_back, m)
+    FDvals = Fermi_Dirac(p_back, m_nu)
 
     # convert momentum from kg*kpc/s to eV
     to_eV = 1/(5.3442883e-28)

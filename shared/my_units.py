@@ -7,7 +7,7 @@ T_nu      = 1.95*unit.K                # Relic neutrino temp. today
 Omega_m0  = 0.3111                     # Matter-energy density today
 Omega_L0  = 1 - Omega_m0               # Dark-energy density today
 
-H_UNIT    = unit.km/unit.s/unit.Mpc
+H_UNIT    = (unit.km/unit.s)/unit.Mpc
 H0        = 67.66*H_UNIT               # Hubble constant today
 h         = H0/100/H_UNIT              # Dimensionless Hubble constant
 

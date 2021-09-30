@@ -1,7 +1,7 @@
-from numpy.random import random
 from shared.preface import *
 import shared.my_units as my
 import shared.functions as fct
+import shared.control_center as CC
 
 
 def EOMs(s, y, rho_0, M_vir):
@@ -36,7 +36,7 @@ def backtrack_1_neutrino(y0_Nr):
     """Simulate trajectory of 1 neutrino."""
 
     #! Redshift start, redshift to integrate back to, redshift amount of steps
-    z_start, z_stop, z_amount = 0, 0.5, 5
+    z_start, z_stop, z_amount = 0, 0.5, 50
 
     global z_steps, s_steps  # other functions can use these variables
 
@@ -79,14 +79,14 @@ if __name__ == '__main__':
     start = time.time()
 
     #! Amount of neutrinos to simulate
-    neutrinos = 2
+    neutrinos = CC.NR_OF_NEUTRINOS
 
     # Position of earth w.r.t Milky Way NFW halo center
     x1, x2, x3 = 8.5, 8.5, 0.
     x0 = np.array([x1, x2, x3])
     
     # Random draws for velocities
-    ui_min, ui_max = 2000.*unit.km/unit.s, 4000.*unit.kpc/unit.s
+    ui_min, ui_max = 2000.*unit.km/unit.s, 4000.*unit.km/unit.s
     ui_min_kpc, ui_max_kpc = ui_min.to(my.Uunit), ui_max.to(my.Uunit)
     ui = np.array([
         np.random.default_rng().uniform(ui_min_kpc.value, ui_max_kpc.value, 3) 
@@ -97,41 +97,9 @@ if __name__ == '__main__':
     y0_Nr = np.array([np.concatenate((x0,ui[i],[i+1])) for i in range(neutrinos)])
 
 
-    Processes = 1
+    Processes = 16
     with ProcessPoolExecutor(Processes) as ex:
         ex.map(backtrack_1_neutrino, y0_Nr)  
-
-    #
-    ### Calculate number density
-    #
-
-    # neutrino mass
-    m_nu = 0.05 * unit.eV  # in natural units
-    m_nu_kg = m_nu.to(unit.kg, unit.mass_energy())  # in SI units
-
-    p0s, p_backs = np.zeros(neutrinos), np.zeros(neutrinos)
-    for Nr in range(neutrinos):
-        
-        # load initial velocity -> momentum today
-        u0 = np.load(f'neutrino_vectors/nu_{int(Nr+1)}.npy')[0][3:6]
-        p0 = np.sqrt(np.sum(u0**2)) * m_nu_kg.value
-        p0s[Nr] = p0
-
-        # load "last" velocity -> momentum at z_back
-        u_back = np.load(f'neutrino_vectors/nu_{int(Nr+1)}.npy')[-1][3:6]
-        p_back = np.sqrt(np.sum(u_back**2)) * m_nu_kg.value
-        p_backs[Nr] = p_back
-
-
-    #NOTE: Attach units [kg*kpc/s] to p0s and p_backs.
-    p_unit = unit.kg*unit.kpc/unit.s
-    p0s, p_backs = p0s*p_unit, p_backs*p_unit
-
-    n_nu = fct.number_density(p0s, p_backs, m_nu)
-    # print('Number density:', fct.number_density(p0, p_back))
-
-
-    print('Final number density:', n_nu)
 
 
     print('Execution time:', time.time()-start, 'seconds.')
