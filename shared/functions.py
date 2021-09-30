@@ -1,6 +1,6 @@
-from astropy.units import equivalencies
 from shared.preface import *
 import shared.my_units as my
+import shared.control_center as CC
 
 def rho_NFW(r, rho_0, r_s):
     """NFW density profile.
@@ -212,11 +212,11 @@ def dPsi_dxi_NFW(x_i, z, rho_0, M_vir):
     return derivative_vector.to(unit.kpc/unit.s**2)
 
 
-def Fermi_Dirac(p, m_nu):
+def Fermi_Dirac(p):
     """Fermi-Dirac phase-space distribution for CNB neutrinos. 
     
     Zero chem. potential and temp. T_nu (CNB temp. today). This distribution
-    is for relativistic neutrinos
+    is for relativistic neutrinos #? so no mass?
 
     Args:
         p (array): magnitude of momentum, must be in eV!
@@ -226,16 +226,18 @@ def Fermi_Dirac(p, m_nu):
         array: Value of Fermi-Dirac distr. at p.
     """
 
-    # Plug into Fermi-Dirac distribution
-    m_nu = 0.*unit.eV  #? not sure if we need mass
-    T_in_eV = my.T_nu.to(unit.eV, unit.temperature_energy())
-    arg_of_exp = np.sqrt(p**2+m_nu**2)/T_in_eV
+    
+    #NOTE: Temp. at z_back is higher than T_nu today.
+    T_zback_eV = my.T_nu.to(unit.eV, unit.temperature_energy())*(1+CC.Z_STOP)
+
+    # Plug into Fermi-Dirac distribution 
+    arg_of_exp = np.sqrt(p**2)/T_zback_eV
     f_of_p = 1 / (np.exp(arg_of_exp.value) + 1)
 
     return f_of_p
 
 
-def number_density(p0, p_back, m_nu):
+def number_density(p0, p_back):
     """Neutrino number density obtained by integration over initial momenta.
 
     Args:
@@ -261,7 +263,7 @@ def number_density(p0, p_back, m_nu):
 
     # precomputed factors
     const = g/(2*np.pi**2)
-    FDvals = Fermi_Dirac(p_back_sort, m_nu)
+    FDvals = Fermi_Dirac(p_back_sort)
 
     #NOTE: n ~ integral dp p**2 f(p), the units come from dp p**2, which have
     #NOTE: eV*3 = 1/eV**-3 ~ 1/length**3

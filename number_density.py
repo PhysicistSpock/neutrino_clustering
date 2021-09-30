@@ -4,31 +4,45 @@ import shared.functions as fct
 import shared.control_center as CC
 
 
+def number_density_1_mass(m_nu_eV):
+
+    # Amount of simulated neutrinos
+    Ns = np.arange(CC.NR_OF_NEUTRINOS, dtype=int)
+
+    # load initial and final velocity
+    u0 = [np.load(f'neutrino_vectors/nu_{Nr+1}.npy')[0][3:6] for Nr in Ns]
+    u1 = [np.load(f'neutrino_vectors/nu_{Nr+1}.npy')[-1][3:6] for Nr in Ns]
+
+    # intermediate arrays
+    a0 = np.array([np.sqrt(np.sum(u**2)) for u in np.array(u0)])
+    a1 = np.array([np.sqrt(np.sum(u**2)) for u in np.array(u1)])
+
+    # convert mass(es) from eV to kg
+    m_nu_kg = m_nu_eV.to(unit.kg, unit.mass_energy())
+
+    n_nus = np.zeros(len(m_nu_kg))
+    for i, m in enumerate(m_nu_kg.value):
+
+        # convert velocities to momenta
+        p0, p1 = a0 * m, a1 * m
+
+        #NOTE: number_density function need input momenta in units [kg*kpc/s]
+        p_unit = unit.kg*unit.kpc/unit.s
+        n_nus[i] = fct.number_density(p0*p_unit, p1*p_unit).value
+
+    np.save('neutrino_data/number_densities.npy', n_nus)
+
+
 if __name__ == '__main__':
 
-    neutrinos = 10000
+    # 10 to 300 meV like in the paper
+    mass_range_eV = np.linspace(0.01, 0.3, 100) * unit.eV
 
-    # neutrino mass
-    m_nu = 0.05 * unit.eV  # in natural units
-    m_nu_kg = m_nu.to(unit.kg, unit.mass_energy())  # in SI units
+    number_density_1_mass(mass_range_eV)
 
-    p0s, p_backs = np.zeros(neutrinos), np.zeros(neutrinos)
-    for Nr in range(neutrinos):
-        
-        # load initial velocity -> momentum today
-        u0 = np.load(f'neutrino_vectors/nu_{int(Nr+1)}.npy')[0][3:6]
-        p0 = np.sqrt(np.sum(u0**2)) * m_nu_kg.value
-        p0s[Nr] = p0
+    n_nus = np.load('neutrino_data/number_densities.npy')
 
-        # load "last" velocity -> momentum at z_back
-        u_back = np.load(f'neutrino_vectors/nu_{int(Nr+1)}.npy')[-1][3:6]
-        p_back = np.sqrt(np.sum(u_back**2)) * m_nu_kg.value
-        p_backs[Nr] = p_back
-
-
-    #NOTE: Attach units [kg*kpc/s] to p0s and p_backs.
-    p_unit = unit.kg*unit.kpc/unit.s
-    p0s, p_backs = p0s*p_unit, p_backs*p_unit
-
-    n_nu = fct.number_density(p0s, p_backs, m_nu)
-    print('Final number density:', n_nu)
+    plt.loglog(mass_range_eV, n_nus)
+    plt.xlabel('neutrino mass [eV]')
+    plt.ylabel(r'number density [1/$cm^3$]')
+    plt.show()

@@ -1,3 +1,4 @@
+from matplotlib.pyplot import draw
 from shared.preface import *
 import shared.my_units as my
 import shared.functions as fct
@@ -35,8 +36,7 @@ def EOMs(s, y, rho_0, M_vir):
 def backtrack_1_neutrino(y0_Nr):
     """Simulate trajectory of 1 neutrino."""
 
-    #! Redshift start, redshift to integrate back to, redshift amount of steps
-    z_start, z_stop, z_amount = 0, 0.5, 50
+    z_start, z_stop, z_amount = CC.Z_START, CC.Z_STOP, CC.Z_AMOUNT
 
     global z_steps, s_steps  # other functions can use these variables
 
@@ -79,22 +79,46 @@ if __name__ == '__main__':
     start = time.time()
 
     #! Amount of neutrinos to simulate
-    neutrinos = CC.NR_OF_NEUTRINOS
+    nu_Nr = CC.NR_OF_NEUTRINOS
 
     # Position of earth w.r.t Milky Way NFW halo center
     x1, x2, x3 = 8.5, 8.5, 0.
     x0 = np.array([x1, x2, x3])
-    
-    # Random draws for velocities
-    ui_min, ui_max = 2000.*unit.km/unit.s, 4000.*unit.km/unit.s
-    ui_min_kpc, ui_max_kpc = ui_min.to(my.Uunit), ui_max.to(my.Uunit)
-    ui = np.array([
-        np.random.default_rng().uniform(ui_min_kpc.value, ui_max_kpc.value, 3) 
-        for _ in range(neutrinos)
-        ])
+
+
+    def draw_ui(amount):
+        
+        '''
+        # conversion factor for limits
+        cf = 5.3442883e-28 / CC.NU_MASS.to(unit.kg, unit.mass_energy()).value
+        T_nu_eV = my.T_nu.to(unit.eV, unit.temperature_energy()).value
+        
+        # limits on velocity
+        lower = 0.01*T_nu_eV*cf
+        upper = 10*T_nu_eV*cf
+
+        #? very confusing, limits way too high
+        '''
+
+        #! quick guesstimate
+        lower = 2000
+        upper = 4000
+
+        # initial velocities array
+        ui_km = np.geomspace(lower, upper, amount)*unit.km/unit.s
+        ui_kpc = ui_km.to(unit.kpc/unit.s)
+
+        # We drew magnitude of velocity, assume u_x=u_y=u_z.
+        ui_array = np.array([np.ones(3)*(elem/np.sqrt(3)) for elem in ui_kpc])
+
+        return ui_array
+
+
+    # draw initial velocities
+    ui = draw_ui(nu_Nr)
 
     # Combine vectors and append neutrino particle number
-    y0_Nr = np.array([np.concatenate((x0,ui[i],[i+1])) for i in range(neutrinos)])
+    y0_Nr = np.array([np.concatenate((x0,ui[i],[i+1])) for i in range(nu_Nr)])
 
 
     Processes = 16
