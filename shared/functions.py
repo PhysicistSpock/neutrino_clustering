@@ -219,16 +219,12 @@ def Fermi_Dirac(p, m_nu):
     is for relativistic neutrinos
 
     Args:
-        p (array): magnitude of momentum
+        p (array): magnitude of momentum, must be in eV!
         m_nu (float): mass of particle species
 
     Returns:
         array: Value of Fermi-Dirac distr. at p.
     """
-
-    # convert momentum from kg*kpc/s to eV
-    to_eV = 1/(5.3442883e-28)
-    p = p.to(unit.kg*unit.m/unit.s).value * to_eV * unit.eV
 
     # Plug into Fermi-Dirac distribution
     m_nu = 0.*unit.eV  #? not sure if we need mass
@@ -253,24 +249,23 @@ def number_density(p0, p_back, m_nu):
 
     g = 1  #? 6 degrees of freedom: flavour and particle/anti-particle
 
-    # sort p0 and p_back together (based on p0)
-    p_unit = p0.unit
-    p0, p_back = p0.value, p_back.value
-    record = np.rec.fromarrays([p0, p_back])
-    record.sort
-    p0, p_back = record.f0*p_unit, record.f1*p_unit
+    # convert momenta from kg*kpc/s to eV
+    to_eV = 1/(5.3442883e-28)
+    p0 = p0.to(unit.kg*unit.m/unit.s).value * to_eV
+    p_back = p_back.to(unit.kg*unit.m/unit.s).value * to_eV
+
+    #NOTE: trapz integral need sorted (ascending) arrays
+    order = p0.argsort()
+    p0_sort, p_back_sort = p0[order]*unit.eV, p_back[order]*unit.eV
+    #! Fermi_Dirac function needs p to have units of eV attached
 
     # precomputed factors
     const = g/(2*np.pi**2)
-    FDvals = Fermi_Dirac(p_back, m_nu)
-
-    # convert momentum from kg*kpc/s to eV
-    to_eV = 1/(5.3442883e-28)
-    p0 = p0.to(unit.kg*unit.m/unit.s).value * to_eV
+    FDvals = Fermi_Dirac(p_back_sort, m_nu)
 
     #NOTE: n ~ integral dp p**2 f(p), the units come from dp p**2, which have
     #NOTE: eV*3 = 1/eV**-3 ~ 1/length**3
-    n = const * np.trapz(p0**2 * FDvals, p0)
+    n = const * np.trapz(p0_sort.value**2 * FDvals, p0_sort.value)
 
     # convert n from eV**3 to 1/cm**3
     ev_m3 = 1/(1.9732705e-7)

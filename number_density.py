@@ -6,7 +6,7 @@ import shared.control_center as CC
 
 if __name__ == '__main__':
 
-    neutrinos = CC.NR_OF_NEUTRINOS
+    neutrinos = 10000
 
     # neutrino mass
     m_nu = 0.05 * unit.eV  # in natural units
