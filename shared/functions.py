@@ -62,8 +62,8 @@ def rho_crit(z):
         array: critical density at redshift z [Msun/kpc**3]
     """    
     
-    H = np.sqrt(1+my.Omega_m0*z) * (1+z) * my.H0
-    rho_crit = 3*H**2 / (8*np.pi*const.G)
+    H_squared = my.H0**2 * (my.Omega_m0*(1+z)**3 + my.Omega_L0) 
+    rho_crit = 3*H_squared / (8*np.pi*const.G)
 
     return rho_crit.to(unit.M_sun/unit.kpc**3)
 
@@ -148,7 +148,8 @@ def s_of_z(z):
         #! H0 makes value of s very large and code slower.
         #? leaving it out makes no difference in results, why?
 
-        s_int = -1/np.sqrt((my.Omega_m0*(1+z)**3 + my.Omega_L0))
+        a_dot = np.sqrt(my.Omega_m0*(1+z) + my.Omega_L0*(1+z)**-2)  #*H0
+        s_int = -1/a_dot
 
         return s_int
 

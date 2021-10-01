@@ -25,6 +25,7 @@ def number_density_1_mass(m_nu_eV):
 
         # convert velocities to momenta
         p0, p1 = a0 * m, a1 * m
+        print(p0[0], p1[1])
 
         #NOTE: number_density function need input momenta in units [kg*kpc/s]
         p_unit = unit.kg*unit.kpc/unit.s
@@ -36,7 +37,7 @@ def number_density_1_mass(m_nu_eV):
 if __name__ == '__main__':
 
     # 10 to 300 meV like in the paper
-    mass_range_eV = np.linspace(0.01, 0.3, 100) * unit.eV
+    mass_range_eV = np.linspace(0.01, 0.3, 2) * unit.eV
 
     number_density_1_mass(mass_range_eV)
 
