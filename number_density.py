@@ -25,7 +25,7 @@ def number_density_1_mass(m_nu_eV):
 
         # convert velocities to momenta
         p0, p1 = a0 * m, a1 * m
-        print(p0[0], p1[1])
+        print(p0[0]-p1[0])
 
         #NOTE: number_density function need input momenta in units [kg*kpc/s]
         p_unit = unit.kg*unit.kpc/unit.s

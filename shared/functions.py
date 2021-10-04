@@ -232,7 +232,7 @@ def Fermi_Dirac(p):
     T_zback_eV = my.T_nu.to(unit.eV, unit.temperature_energy())*(1+CC.Z_STOP)
 
     # Plug into Fermi-Dirac distribution 
-    arg_of_exp = np.sqrt(p**2)/T_zback_eV
+    arg_of_exp = p/T_zback_eV
     f_of_p = 1 / (np.exp(arg_of_exp.value) + 1)
 
     return f_of_p
@@ -257,7 +257,7 @@ def number_density(p0, p_back):
     p0 = p0.to(unit.kg*unit.m/unit.s).value * to_eV
     p_back = p_back.to(unit.kg*unit.m/unit.s).value * to_eV
 
-    #NOTE: trapz integral need sorted (ascending) arrays
+    #NOTE: trapz integral method needs sorted (ascending) arrays
     order = p0.argsort()
     p0_sort, p_back_sort = p0[order]*unit.eV, p_back[order]*unit.eV
     #! Fermi_Dirac function needs p to have units of eV attached
