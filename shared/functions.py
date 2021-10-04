@@ -2,6 +2,11 @@ from shared.preface import *
 import shared.my_units as my
 import shared.control_center as CC
 
+
+#
+### Utility functions.
+#
+
 def rho_NFW(r, rho_0, r_s):
     """NFW density profile.
 
@@ -130,6 +135,10 @@ def scale_radius(z, M_vir):
     return r_s.to(unit.kpc)
 
 
+#
+### Main functions.
+#
+
 def s_of_z(z):
     """Convert redshift to time variable s with eqn. 4.1 in Mertsch et al.
     (2020), keeping only Omega_m0 and Omega_Lambda0 in the Hubble eqn. for H(z).
@@ -138,7 +147,7 @@ def s_of_z(z):
         z (float): redshift
 
     Returns:
-        float: time variable s (in [seconds] due to 1/H0 factor)
+        float: time variable s (in [seconds] if 1/H0 factor is included)
     """    
 
     def s_integrand(z):
@@ -148,7 +157,7 @@ def s_of_z(z):
         #! H0 makes value of s very large and code slower.
         #? leaving it out makes no difference in results, why?
 
-        a_dot = np.sqrt(my.Omega_m0*(1+z) + my.Omega_L0*(1+z)**-2)  #*H0
+        a_dot = np.sqrt(my.Omega_m0*(1+z) + my.Omega_L0*(1+z)**-2) #*H0
         s_int = -1/a_dot
 
         return s_int

@@ -25,7 +25,6 @@ def number_density_1_mass(m_nu_eV):
 
         # convert velocities to momenta
         p0, p1 = a0 * m, a1 * m
-        print(p0[0]-p1[0])
 
         #NOTE: number_density function need input momenta in units [kg*kpc/s]
         p_unit = unit.kg*unit.kpc/unit.s
@@ -37,13 +36,15 @@ def number_density_1_mass(m_nu_eV):
 if __name__ == '__main__':
 
     # 10 to 300 meV like in the paper
-    mass_range_eV = np.linspace(0.01, 0.3, 2) * unit.eV
+    mass_range_eV = np.linspace(0.01, 0.3, 100) * unit.eV
 
     number_density_1_mass(mass_range_eV)
 
     n_nus = np.load('neutrino_data/number_densities.npy')
 
-    plt.loglog(mass_range_eV, n_nus)
-    plt.xlabel('neutrino mass [eV]')
-    plt.ylabel(r'number density [1/$cm^3$]')
+    n0 = 56  # standard neutrino number density 
+    plt.loglog(mass_range_eV*1e3, n_nus/n0)
+    plt.title('NFW only')
+    plt.xlabel(r'$m_{\nu}$ [meV]')
+    plt.ylabel(r'$n_{\nu} / n_{\nu, 0}$')
     plt.show()

@@ -14,7 +14,7 @@ def EOMs(s, y, rho_0, M_vir):
 
     # Pick out redshift z according to current time s
     #NOTE: solve_ivp algorithm calculates steps between s_steps, for these we
-    #      just use the z value for the starting s
+    #NOTE: just use the z value for the starting s
     z_for_between_s_steps = 0.
     if s in s_steps:
         z = z_steps[s_steps==s]
@@ -26,10 +26,10 @@ def EOMs(s, y, rho_0, M_vir):
 
     # global minus sign for dydt array, s.t. calculation is backwards in time
     u_i_kpc = u_i.to(unit.kpc/unit.s)
-    dyds = -np.array([u_i_kpc.value, -(1+z)**-2 * derivative_vector.value])
+    dyds = np.array([u_i_kpc.value, -(1+z)**-2 * derivative_vector.value])
 
     #NOTE: reshape from (2,3) to (6,), s.t. the vector looks like
-    #      (x_1, x_2, x_3, u_1, u_2, u_3), required by solve_ivp algorithm
+    #NOTE: (x_1, x_2, x_3, u_1, u_2, u_3), required by solve_ivp algorithm
     return np.reshape(dyds, 6)
 
 
@@ -86,7 +86,7 @@ if __name__ == '__main__':
     x0 = np.array([x1, x2, x3])
 
 
-    def draw_ui(amount):
+    def draw_ui(v_points, phi_points, theta_points):
         
         '''
         # conversion factor for limits
@@ -101,22 +101,32 @@ if __name__ == '__main__':
         '''
 
         #! quick guesstimate
-        lower = 2000
-        upper = 4000
+        lower = 10075 #1000
+        upper = 10075309 #5000
 
-        # initial velocities array
-        ui_km = np.geomspace(lower, upper, amount)*unit.km/unit.s
-        ui_kpc = ui_km.to(unit.kpc/unit.s)
+        # Initial magnitudes of the velocities
+        v_km = np.geomspace(lower, upper, v_points)*unit.km/unit.s
+        v_kpc = v_km.to(unit.kpc/unit.s).value
 
-        # We drew magnitude of velocity, assume u_x=u_y=u_z.
-        ui_array = np.array([np.ones(3)*(elem/np.sqrt(3)) for elem in ui_kpc])
+        # Split up this magnitude into velocity components
+        #NOTE: done by using spher. coords. trafos, which act as "weights"
 
-        return ui_array
+        eps = 0.01  # shift in theta, so poles are not included
+        ps = np.linspace(0., 2.*np.pi, phi_points)
+        ts = np.linspace(0.+eps, np.pi-eps, theta_points)
+
+        uxs = [v*np.cos(p)*np.sin(t) for v in v_kpc for p in ps for t in ts]
+        uys = [v*np.sin(p)*np.sin(t) for v in v_kpc for p in ps for t in ts]
+        uzs = [v*np.cos(t) for v in v_kpc for _ in ps for t in ts]
+
+        ui_array = np.array([[ux, uy, uz] for ux,uy,uz in zip(uxs,uys,uzs)])        
+
+        return ui_array 
 
 
     # draw initial velocities
-    ui = draw_ui(nu_Nr)
-
+    ui = draw_ui(CC.PHIs, CC.THETAs, CC.Vs)
+    
     # Combine vectors and append neutrino particle number
     y0_Nr = np.array([np.concatenate((x0,ui[i],[i+1])) for i in range(nu_Nr)])
 

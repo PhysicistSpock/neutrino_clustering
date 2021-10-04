@@ -1,7 +1,11 @@
 from shared.preface import *
 
-NR_OF_NEUTRINOS = 16*100
+
+PHIs = 10
+THETAs = 10
+Vs = 2
+NR_OF_NEUTRINOS = PHIs*THETAs*Vs
 NU_MASS = 0.05*unit.eV
 
 # Redshift integration parameters
-Z_START, Z_STOP, Z_AMOUNT = 0., 0.5, 50
+Z_START, Z_STOP, Z_AMOUNT = 0., 4, 50
