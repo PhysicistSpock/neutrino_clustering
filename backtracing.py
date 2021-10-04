@@ -23,14 +23,14 @@ def EOMs(s, y, rho_0, M_vir):
         z = np.array([z_for_between_s_steps])
 
     derivative_vector = fct.dPsi_dxi_NFW(x_i, z[0], rho_0, M_vir)
+    
+    # if CHECK:
+    #     print(s)
 
-    # global minus sign for dydt array, s.t. calculation is backwards in time
     u_i_kpc = u_i.to(unit.kpc/unit.s)
     dyds = np.array([u_i_kpc.value, -(1+z)**-2 * derivative_vector.value])
 
-    #NOTE: reshape from (2,3) to (6,), s.t. the vector looks like
-    #NOTE: (x_1, x_2, x_3, u_1, u_2, u_3), required by solve_ivp algorithm
-    return np.reshape(dyds, 6)
+    return dyds
 
 
 def backtrack_1_neutrino(y0_Nr):
@@ -38,7 +38,7 @@ def backtrack_1_neutrino(y0_Nr):
 
     z_start, z_stop, z_amount = CC.Z_START, CC.Z_STOP, CC.Z_AMOUNT
 
-    global z_steps, s_steps  # other functions can use these variables
+    global z_steps, s_steps, CHECK  # other functions can use these variables
 
     # Split input into initial vector and neutrino number
     y0, Nr = y0_Nr[0:-1], y0_Nr[-1]
@@ -46,7 +46,8 @@ def backtrack_1_neutrino(y0_Nr):
     # Redshifts to integrate over
     zeds = np.linspace(z_start, z_stop, z_amount)
 
-    
+    CHECK = False
+
     sols = []
     loop = range(len(zeds)-1)
     for zi in loop:
@@ -54,15 +55,24 @@ def backtrack_1_neutrino(y0_Nr):
         # Save initial phase-space vector
         if zi == loop[0]:
             sols.append(y0)
+            if Nr == CC.NR_OF_NEUTRINOS:
+                CHECK = True
+                # print(Nr)
 
         # Redshift and converted time variable s
         z0, z1 = zeds[zi], zeds[zi+1]
         z_steps = np.array([z0, z1])
         s_steps = np.array([fct.s_of_z(z0), fct.s_of_z(z1)])
+        s_size = np.abs(s_steps[1]-s_steps[0])
+        
 
         # Solve all 6 EOMs
         #NOTE: output as raw numbers but in [kpc, kpc/s]
-        sol = solve_ivp(EOMs, s_steps, y0, args=(my.rho0_NFW, my.Mvir_NFW))
+        sol = solve_ivp(
+            EOMs, s_steps, y0, vectorized=True,
+            args=(my.rho0_NFW, my.Mvir_NFW), method='LSODA',
+            min_step=s_size, first_step=s_size, max_step=s_size
+            )
 
         # Overwrite current vector with new one.
         y0 = np.array([sol.y[0:3,-1], sol.y[3:6,-1]]).flatten()
