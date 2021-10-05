@@ -13,7 +13,7 @@ def EOMs(s, y, rho_0, M_vir):
     x_i, u_i = x_i_vals*my.Xunit, u_i_vals*my.Uunit
 
     # Pick out redshift z according to current time s
-    #NOTE: for in between s_steps we take initial redshift
+    #NOTE: for in between s_steps (done by solve_ivp) we take initial redshift
     if s in s_steps:
         z = z_steps[s_steps==s][0]
     else:
@@ -50,19 +50,13 @@ def backtrack_1_neutrino(y0_Nr):
         # Redshift and converted time variable s
         z0, z1 = zeds[zi], zeds[zi+1]
         z_steps = np.array([z0, z1])
-        s_steps = np.array([fct.s_of_z(z0), fct.s_of_z(z1)])
-
-        #NOTE: Set min_step, first_step and max_step to this value,
-        #NOTE: s.t. no intermediate s steps are performed by solve_ivp.
-        s_size = np.abs(s_steps[1]-s_steps[0])        
+        s_steps = np.array([fct.s_of_z(z0), fct.s_of_z(z1)])     
 
         # Solve all 6 EOMs
         #NOTE: output as raw numbers but in [kpc, kpc/s]
         sol = solve_ivp(
             EOMs, s_steps, y0,
-            args=(my.rho0_NFW, my.Mvir_NFW)
-            # method='RK45',
-            # min_step=s_size, first_step=s_size, max_step=s_size
+            args=(my.rho0_NFW, my.Mvir_NFW), method='RK45'
             )
 
         # Overwrite current vector with new one.

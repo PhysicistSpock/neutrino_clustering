@@ -157,7 +157,7 @@ def s_of_z(z):
         #! H0 makes value of s very large and code slower.
         #? leaving it out makes no difference in results, why?
 
-        a_dot = np.sqrt(my.Omega_m0*(1+z) + my.Omega_L0*(1+z)**-2) *H0
+        a_dot = np.sqrt(my.Omega_m0*(1+z) + my.Omega_L0*(1+z)**-2) *1e-10#*H0
         s_int = -1/a_dot
 
         return s_int
