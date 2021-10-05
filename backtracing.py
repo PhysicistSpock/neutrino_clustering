@@ -1,126 +1,127 @@
-from numpy.random import random
+from matplotlib.pyplot import draw
 from shared.preface import *
-import shared.my_units as unit
+import shared.my_units as my
 import shared.functions as fct
+import shared.control_center as CC
 
 
 def EOMs(s, y, rho_0, M_vir):
     """Equations of motion for all x_i's and u_i's in terms of s."""
 
-
-    # initialize vector: x_i in [kpc], u_i in [kpc/s]
-    x_i, u_i = np.reshape(y, (2,3))
+    # initialize vector and bestow units
+    x_i_vals, u_i_vals = np.reshape(y, (2,3))
+    x_i, u_i = x_i_vals*my.Xunit, u_i_vals*my.Uunit
 
     # Pick out redshift z according to current time s
-    #NOTE: solve_ivp algorithm calculates steps between s_steps, for these we
-    #      just use the z value for the starting s
-    z_for_between_s_steps = 0.
-    if s in s_steps:
-        z = z_steps[s_steps==s]
-        z_for_between_s_steps = z
-    else:
-        z = np.array([z_for_between_s_steps])
+    z = z_steps[s_steps==s]
 
-    #TODO: explore interpolation function for in between zeds
+    gradient = fct.dPsi_dxi_NFW(x_i, z[0], rho_0, M_vir)
 
-    # derivative of grav. potential in [kpc/s**2]
-    derivative_vector = fct.dPsi_dxi_NFW(x_i, z[0], rho_0, M_vir)
+    u_i_kpc = u_i.to(unit.kpc/unit.s)
+    dyds = [u_i_kpc.value, -(1+z)**-2 * gradient.value]
+    dyds = np.reshape(dyds, (6,))
 
-    # global minus sign for dydt array, s.t. calculation is backwards in time
-    dyds = -np.array([u_i, -(1+z)**-2 * derivative_vector])
-    
-    #NOTE on units:
-    # dydt array will be in [[kpc/s],[kpc/s**s]]
-    # and after integration in [[kpc],[kpc/s]], correct for x_i and u_i resp.
-
-    # reshape from (2,3) to (6,), s.t. the vector looks like
-    # (x_1, x_2, x_3, u_1, u_2, u_3), required by solve_ivp algorithm
-    return np.reshape(dyds, 6)
+    return dyds
 
 
 def backtrack_1_neutrino(y0_Nr):
-    global z_steps, s_steps
+    """Simulate trajectory of 1 neutrino."""
+
+    z_start, z_stop, z_amount = CC.Z_START, CC.Z_STOP, CC.Z_AMOUNT
+
+    global z_steps, s_steps, CHECK  # other functions can use these variables
 
     # Split input into initial vector and neutrino number
     y0, Nr = y0_Nr[0:-1], y0_Nr[-1]
 
-    # NFW halo parameters
-    rho_0 = unit.rho0_NFW 
-    M_vir = unit.Mvir_NFW
-
     # Redshifts to integrate over
-    zeds = np.linspace(0,0.5,50)
+    zeds = np.linspace(z_start, z_stop, z_amount)
 
-    # Array to store solutions
+    # solutions array with initial and final vector for 1 neutrino
     sols = []
+    sols.append(y0)  # save initial vector
 
-    loop = range(len(zeds)-1)
-    for zi in loop:
+    for zi in range(len(zeds)-1):
 
-        # Append initial phase-space vector to solutions array
-        if zi == loop[0]:
-            sols.append(y0)
-
-        # Redshift and converted to time variable s
+        # Redshift and converted time variable s
         z0, z1 = zeds[zi], zeds[zi+1]
         z_steps = np.array([z0, z1])
-        s_steps = np.array([fct.s_of_z(z0), fct.s_of_z(z1)])  # in [s] already
+        s_steps = np.array([fct.s_of_z(z0), fct.s_of_z(z1)])
+
+        #NOTE: Set min_step, first_step and max_step to this value,
+        #NOTE: s.t. no intermediate s steps are performed by solve_ivp.
+        s_size = np.abs(s_steps[1]-s_steps[0])        
 
         # Solve all 6 EOMs
-        sol = solve_ivp(EOMs, s_steps, y0, args=(rho_0, M_vir))
-        
-        # if zi in (0,1):
-        #     print('Solve EOMs:', time.time()-start, 'seconds.')
+        #NOTE: output as raw numbers but in [kpc, kpc/s]
+        sol = solve_ivp(
+            EOMs, s_steps, y0,
+            args=(my.rho0_NFW, my.Mvir_NFW), method='LSODA',
+            min_step=s_size, first_step=s_size, max_step=s_size
+            )
 
-        # Overwrite current vector with new one (already has Xunit and Uunit).
+        # Overwrite current vector with new one.
         y0 = np.array([sol.y[0:3,-1], sol.y[3:6,-1]]).flatten()
 
-        # Append last phase-space vector to solutions array
-        if zi == loop[-1]:
-            sols.append(y0)
 
+    sols.append(y0)  # save final vector
     np.save(f'neutrino_vectors/nu_{int(Nr)}.npy', np.array(sols))
-    # print(f'nu_{int(Nr)} vector:', np.array(sols)[-1])
+
+
 
 if __name__ == '__main__':
     start = time.time()
 
-    # Initial spatial positions in [kpc] and velocities in [kpc/s]
-    Xunit, Uunit = unit.kpc, unit.kpc/unit.s
+    #! Amount of neutrinos to simulate
+    nu_Nr = CC.NR_OF_NEUTRINOS
 
     # Position of earth w.r.t Milky Way NFW halo center
     x1, x2, x3 = 8.5, 8.5, 0.
-    x0 = np.array([x1, x2, x3]) * Xunit
-    
-    # Random draws for velocities
-    ui_min, ui_max, ui_size = 0.1, 1., 50
-    ui = np.array([
-        np.random.default_rng().uniform(ui_min, ui_max, 3) 
-        for _ in range(ui_size)
-        ]) * Uunit
+    x0 = np.array([x1, x2, x3])
 
+
+    def draw_ui(v_points, phi_points, theta_points):
+        """Get initial velocities for the neutrinos."""
+        
+        # conversion factor for limits
+        cf = 5.3442883e-28 / CC.NU_MASS.to(unit.kg, unit.mass_energy()).value
+        T_nu_eV = my.T_nu.to(unit.eV, unit.temperature_energy()).value
+        
+        # limits on velocity
+        lower = 0.01*T_nu_eV*cf
+        upper = 10*T_nu_eV*cf
+        #? much higher limits, than from formula in Ringwald & Wong (2004)
+
+        # Initial magnitudes of the velocities
+        v_km = np.geomspace(lower, upper, v_points)*unit.km/unit.s
+        v_kpc = v_km.to(unit.kpc/unit.s).value
+
+        # Split up this magnitude into velocity components
+        #NOTE: done by using spher. coords. trafos, which act as "weights"
+
+        eps = 0.01  # shift in theta, so poles are not included
+        ps = np.linspace(0., 2.*np.pi, phi_points)
+        ts = np.linspace(0.+eps, np.pi-eps, theta_points)
+
+        uxs = [v*np.cos(p)*np.sin(t) for v in v_kpc for p in ps for t in ts]
+        uys = [v*np.sin(p)*np.sin(t) for v in v_kpc for p in ps for t in ts]
+        uzs = [v*np.cos(t) for v in v_kpc for _ in ps for t in ts]
+
+        ui_array = np.array([[ux, uy, uz] for ux,uy,uz in zip(uxs,uys,uzs)])        
+
+        return ui_array 
+
+
+    # draw initial velocities
+    ui = draw_ui(CC.PHIs, CC.THETAs, CC.Vs)
+    
     # Combine vectors and append neutrino particle number
-    y0_Nr = np.array([np.concatenate((x0,ui[i],[i+1])) for i in range(ui_size)])
+    y0_Nr = np.array([np.concatenate((x0,ui[i],[i+1])) for i in range(nu_Nr)])
 
 
-    with ProcessPoolExecutor(8*2) as ex:
+    Processes = 16
+    with ProcessPoolExecutor(Processes) as ex:
         ex.map(backtrack_1_neutrino, y0_Nr)  
-
-    #
-    ### Calculate number density
-    #
-
-    m_nu = 1.  # neutrino mass
-    n_nu = 0.
-    for Nr in range(ui_size):
-        u0 = np.load(f'neutrino_vectors/nu_{int(Nr+1)}.npy')[0][3:6]
-        u_back = np.load(f'neutrino_vectors/nu_{int(Nr+1)}.npy')[-1][3:6]
-        p0 = np.sum(u0**2) * m_nu
-        p_back = np.sum(u_back**2) * m_nu
-
-        n_nu += fct.number_density(p0, p_back)
-    
-    print(n_nu)
 
 
     print('Execution time:', time.time()-start, 'seconds.')

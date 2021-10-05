@@ -7,6 +7,10 @@ import numpy as np
 import pandas as pd
 import re
 
+# astrophysics
+from astropy import units as unit
+from astropy import constants as const
+
 # speed improvement
 import numba as nb  # jit, njit, vectorize
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
@@ -16,6 +20,7 @@ import sympy as sympy
 
 # scipy packages
 from scipy.integrate import solve_ivp, quad
+from scipy.special import expit
 
 # plotting
 import matplotlib.pyplot as plt
