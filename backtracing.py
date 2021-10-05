@@ -13,9 +13,13 @@ def EOMs(s, y, rho_0, M_vir):
     x_i, u_i = x_i_vals*my.Xunit, u_i_vals*my.Uunit
 
     # Pick out redshift z according to current time s
-    z = z_steps[s_steps==s]
+    #NOTE: for in between s_steps we take initial redshift
+    if s in s_steps:
+        z = z_steps[s_steps==s][0]
+    else:
+        z = z_steps[0]
 
-    gradient = fct.dPsi_dxi_NFW(x_i, z[0], rho_0, M_vir)
+    gradient = fct.dPsi_dxi_NFW(x_i, z, rho_0, M_vir)
 
     u_i_kpc = u_i.to(unit.kpc/unit.s)
     dyds = [u_i_kpc.value, -(1+z)**-2 * gradient.value]
@@ -29,7 +33,7 @@ def backtrack_1_neutrino(y0_Nr):
 
     z_start, z_stop, z_amount = CC.Z_START, CC.Z_STOP, CC.Z_AMOUNT
 
-    global z_steps, s_steps, CHECK  # other functions can use these variables
+    global z_steps, s_steps, Nr  # other functions can use these variables
 
     # Split input into initial vector and neutrino number
     y0, Nr = y0_Nr[0:-1], y0_Nr[-1]
@@ -56,8 +60,9 @@ def backtrack_1_neutrino(y0_Nr):
         #NOTE: output as raw numbers but in [kpc, kpc/s]
         sol = solve_ivp(
             EOMs, s_steps, y0,
-            args=(my.rho0_NFW, my.Mvir_NFW), method='LSODA',
-            min_step=s_size, first_step=s_size, max_step=s_size
+            args=(my.rho0_NFW, my.Mvir_NFW)
+            # method='RK45',
+            # min_step=s_size, first_step=s_size, max_step=s_size
             )
 
         # Overwrite current vector with new one.
