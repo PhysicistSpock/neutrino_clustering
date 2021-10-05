@@ -34,6 +34,9 @@ def backtrack_1_neutrino(y0_Nr):
     # Split input into initial vector and neutrino number
     y0, Nr = y0_Nr[0:-1], y0_Nr[-1]
 
+    if Nr == CC.NR_OF_NEUTRINOS:
+        print(y0)
+
     # Redshifts to integrate over
     zeds = np.linspace(z_start, z_stop, z_amount)
 
@@ -62,9 +65,12 @@ def backtrack_1_neutrino(y0_Nr):
 
         # Overwrite current vector with new one.
         y0 = np.array([sol.y[0:3,-1], sol.y[3:6,-1]]).flatten()
+        
+        if Nr==CC.NR_OF_NEUTRINOS:
+            print(y0[3:6])
 
+        sols.append(y0)  # save current vector
 
-    sols.append(y0)  # save final vector
     np.save(f'neutrino_vectors/nu_{int(Nr)}.npy', np.array(sols))
 
 
@@ -76,7 +82,7 @@ if __name__ == '__main__':
     nu_Nr = CC.NR_OF_NEUTRINOS
 
     # Position of earth w.r.t Milky Way NFW halo center
-    x1, x2, x3 = 8.5, 8.5, 0.
+    x1, x2, x3 = 8.5/np.sqrt(2), 8.5/np.sqrt(2), 0.
     x0 = np.array([x1, x2, x3])
 
 
