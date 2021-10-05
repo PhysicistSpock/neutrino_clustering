@@ -224,9 +224,7 @@ def dPsi_dxi_NFW(x_i, z, rho_0, M_vir):
 
 def Fermi_Dirac(p):
     """Fermi-Dirac phase-space distribution for CNB neutrinos. 
-    
-    Zero chem. potential and temp. T_nu (CNB temp. today). This distribution
-    is for relativistic neutrinos #? so no mass?
+    Zero chem. potential and temp. T_nu (CNB temp. today). 
 
     Args:
         p (array): magnitude of momentum, must be in eV!

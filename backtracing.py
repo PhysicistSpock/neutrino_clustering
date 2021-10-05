@@ -13,22 +13,13 @@ def EOMs(s, y, rho_0, M_vir):
     x_i, u_i = x_i_vals*my.Xunit, u_i_vals*my.Uunit
 
     # Pick out redshift z according to current time s
-    #NOTE: solve_ivp algorithm calculates steps between s_steps, for these we
-    #NOTE: just use the z value for the starting s
-    z_for_between_s_steps = 0.
-    if s in s_steps:
-        z = z_steps[s_steps==s]
-        z_for_between_s_steps = z
-    else:
-        z = np.array([z_for_between_s_steps])
+    z = z_steps[s_steps==s]
 
-    derivative_vector = fct.dPsi_dxi_NFW(x_i, z[0], rho_0, M_vir)
-    
-    # if CHECK:
-    #     print(s)
+    gradient = fct.dPsi_dxi_NFW(x_i, z[0], rho_0, M_vir)
 
     u_i_kpc = u_i.to(unit.kpc/unit.s)
-    dyds = np.array([u_i_kpc.value, -(1+z)**-2 * derivative_vector.value])
+    dyds = [u_i_kpc.value, -(1+z)**-2 * gradient.value]
+    dyds = np.reshape(dyds, (6,))
 
     return dyds
 
@@ -46,30 +37,25 @@ def backtrack_1_neutrino(y0_Nr):
     # Redshifts to integrate over
     zeds = np.linspace(z_start, z_stop, z_amount)
 
-    CHECK = False
-
+    # solutions array with initial and final vector for 1 neutrino
     sols = []
-    loop = range(len(zeds)-1)
-    for zi in loop:
+    sols.append(y0)  # save initial vector
 
-        # Save initial phase-space vector
-        if zi == loop[0]:
-            sols.append(y0)
-            if Nr == CC.NR_OF_NEUTRINOS:
-                CHECK = True
-                # print(Nr)
+    for zi in range(len(zeds)-1):
 
         # Redshift and converted time variable s
         z0, z1 = zeds[zi], zeds[zi+1]
         z_steps = np.array([z0, z1])
         s_steps = np.array([fct.s_of_z(z0), fct.s_of_z(z1)])
-        s_size = np.abs(s_steps[1]-s_steps[0])
-        
+
+        #NOTE: Set min_step, first_step and max_step to this value,
+        #NOTE: s.t. no intermediate s steps are performed by solve_ivp.
+        s_size = np.abs(s_steps[1]-s_steps[0])        
 
         # Solve all 6 EOMs
         #NOTE: output as raw numbers but in [kpc, kpc/s]
         sol = solve_ivp(
-            EOMs, s_steps, y0, vectorized=True,
+            EOMs, s_steps, y0,
             args=(my.rho0_NFW, my.Mvir_NFW), method='LSODA',
             min_step=s_size, first_step=s_size, max_step=s_size
             )
@@ -77,10 +63,8 @@ def backtrack_1_neutrino(y0_Nr):
         # Overwrite current vector with new one.
         y0 = np.array([sol.y[0:3,-1], sol.y[3:6,-1]]).flatten()
 
-        # Save last phase-space vector
-        if zi == loop[-1]:
-            sols.append(y0)
 
+    sols.append(y0)  # save final vector
     np.save(f'neutrino_vectors/nu_{int(Nr)}.npy', np.array(sols))
 
 
@@ -97,8 +81,8 @@ if __name__ == '__main__':
 
 
     def draw_ui(v_points, phi_points, theta_points):
+        """Get initial velocities for the neutrinos."""
         
-        '''
         # conversion factor for limits
         cf = 5.3442883e-28 / CC.NU_MASS.to(unit.kg, unit.mass_energy()).value
         T_nu_eV = my.T_nu.to(unit.eV, unit.temperature_energy()).value
@@ -106,13 +90,7 @@ if __name__ == '__main__':
         # limits on velocity
         lower = 0.01*T_nu_eV*cf
         upper = 10*T_nu_eV*cf
-
-        #? very confusing, limits way too high
-        '''
-
-        #! quick guesstimate
-        lower = 10075 #1000
-        upper = 10075309 #5000
+        #? much higher limits, than from formula in Ringwald & Wong (2004)
 
         # Initial magnitudes of the velocities
         v_km = np.geomspace(lower, upper, v_points)*unit.km/unit.s
