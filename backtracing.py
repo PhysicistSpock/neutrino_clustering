@@ -62,9 +62,6 @@ def backtrack_1_neutrino(y0_Nr):
 
         # Overwrite current vector with new one.
         y0 = np.array([sol.y[0:3,-1], sol.y[3:6,-1]]).flatten()
-        
-        if Nr==CC.NR_OF_NEUTRINOS:
-            print(y0[3:6])
 
         sols.append(y0)  # save current vector
 
