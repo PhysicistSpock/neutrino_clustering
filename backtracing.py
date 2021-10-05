@@ -34,9 +34,6 @@ def backtrack_1_neutrino(y0_Nr):
     # Split input into initial vector and neutrino number
     y0, Nr = y0_Nr[0:-1], y0_Nr[-1]
 
-    if Nr == CC.NR_OF_NEUTRINOS:
-        print(y0)
-
     # Redshifts to integrate over
     zeds = np.linspace(z_start, z_stop, z_amount)
 
