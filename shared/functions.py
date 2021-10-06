@@ -154,8 +154,7 @@ def s_of_z(z):
 
         # original H0 in units ~[1/s], we only need the value
         H0 = my.H0.to(unit.s**-1).value
-        #! H0 makes value of s very large and code slower.
-        #? leaving it out makes no difference in results, why?
+        #? H0 impacts the change of velocities significantly
 
         a_dot = np.sqrt(my.Omega_m0*(1+z) + my.Omega_L0*(1+z)**-2) *1e-10#*H0
         s_int = -1/a_dot

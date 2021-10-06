@@ -55,8 +55,8 @@ def backtrack_1_neutrino(y0_Nr):
         # Solve all 6 EOMs
         #NOTE: output as raw numbers but in [kpc, kpc/s]
         sol = solve_ivp(
-            EOMs, s_steps, y0,
-            args=(my.rho0_NFW, my.Mvir_NFW), method='RK45'
+            EOMs, s_steps, y0, method='RK45',
+            args=(my.rho0_NFW, my.Mvir_NFW)
             )
 
         # Overwrite current vector with new one.
