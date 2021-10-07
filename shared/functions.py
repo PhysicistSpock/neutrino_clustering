@@ -227,7 +227,6 @@ def Fermi_Dirac(p):
 
     Args:
         p (array): magnitude of momentum, must be in eV!
-        m_nu (float): mass of particle species
 
     Returns:
         array: Value of Fermi-Dirac distr. at p.
@@ -235,7 +234,7 @@ def Fermi_Dirac(p):
 
     
     #NOTE: Temp. at z_back is higher than T_nu today.
-    T_zback_eV = my.T_nu.to(unit.eV, unit.temperature_energy())*(1+CC.Z_STOP)
+    T_zback_eV = my.T_nu_eV*(1+CC.Z_STOP)
 
     # Plug into Fermi-Dirac distribution 
     arg_of_exp = p/T_zback_eV
