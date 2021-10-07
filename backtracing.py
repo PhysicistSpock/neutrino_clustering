@@ -89,7 +89,9 @@ if __name__ == '__main__':
         # limits on velocity
         lower = 0.01*T_nu_eV*cf
         upper = 10*T_nu_eV*cf
-        #? much higher limits, than from formula in Ringwald & Wong (2004)
+
+        lower, upper = lower*unit.m/unit.s, upper*unit.m/unit.s
+        lower, upper = lower.to(unit.km/unit.s).value, upper.to(unit.km/unit.s).value
 
         # Initial magnitudes of the velocities
         v_km = np.geomspace(lower, upper, v_points)*unit.km/unit.s

@@ -156,7 +156,7 @@ def s_of_z(z):
         H0 = my.H0.to(unit.s**-1).value
         #? H0 impacts the change of velocities significantly
 
-        a_dot = np.sqrt(my.Omega_m0*(1+z) + my.Omega_L0*(1+z)**-2) *1e-10#*H0
+        a_dot = np.sqrt(my.Omega_m0*(1+z)**3 + my.Omega_L0)*H0
         s_int = -1/a_dot
 
         return s_int
