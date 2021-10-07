@@ -30,9 +30,9 @@ def draw_ui(v_points, phi_points, theta_points):
     ps = np.linspace(0., 2.*np.pi, phi_points)
     ts = np.linspace(0.+eps, np.pi-eps, theta_points)
 
-    uxs = [v*np.cos(p)*np.sin(t) for v in v_kpc for p in ps for t in ts]
-    uys = [v*np.sin(p)*np.sin(t) for v in v_kpc for p in ps for t in ts]
-    uzs = [v*np.cos(t) for v in v_kpc for _ in ps for t in ts]
+    uxs = [v*np.cos(p)*np.sin(t) for t in ts for p in ps for v in v_kpc]
+    uys = [v*np.sin(p)*np.sin(t) for t in ts for p in ps for v in v_kpc]
+    uzs = [v*np.cos(t) for t in ts for p in ps for v in v_kpc]
 
     ui_array = np.array([[ux, uy, uz] for ux,uy,uz in zip(uxs,uys,uzs)])        
 
@@ -107,7 +107,8 @@ if __name__ == '__main__':
     nu_Nr = CC.NR_OF_NEUTRINOS
 
     # Position of earth w.r.t Milky Way NFW halo center.
-    x1, x2, x3 = 8.5/np.sqrt(2), 8.5/np.sqrt(2), 0.
+    #NOTE: Earth is placed on x axis of coord. system.
+    x1, x2, x3 = 8.5, 0., 0.
     x0 = np.array([x1, x2, x3])
 
     # Draw initial velocities.
