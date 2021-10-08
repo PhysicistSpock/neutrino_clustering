@@ -177,7 +177,7 @@ def dPsi_dxi_NFW(x_i, z, rho_0, M_vir):
 
     Returns:
         array: Derivative vector of grav. potential. for all 3 spatial coords.
-               with units of acceleration
+               with units of acceleration.
     """    
 
     # compute values dependent on redshift
@@ -215,7 +215,8 @@ def dPsi_dxi_NFW(x_i, z, rho_0, M_vir):
     ratio = m.value/r_s.value
 
     prefactor = -4*np.pi*const.G*rho_0*r_s**2 * np.log(1+(ratio)) * r_s
-    derivative = prefactor / r0**2
+    derivative = (-1) * prefactor / r0**2
+
     derivative_vector = derivative * x_i/r0
 
     return derivative_vector.to(unit.kpc/unit.s**2)

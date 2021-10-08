@@ -5,7 +5,7 @@ import shared.functions as fct
 import shared.control_center as CC
 
 
-def draw_ui(v_points, phi_points, theta_points):
+def draw_ui(phi_points, theta_points, v_points):
     """Get initial velocities for the neutrinos."""
     
     # conversion factor for limits
@@ -30,9 +30,9 @@ def draw_ui(v_points, phi_points, theta_points):
     ps = np.linspace(0., 2.*np.pi, phi_points)
     ts = np.linspace(0.+eps, np.pi-eps, theta_points)
 
-    uxs = [v*np.cos(p)*np.sin(t) for t in ts for p in ps for v in v_kpc]
-    uys = [v*np.sin(p)*np.sin(t) for t in ts for p in ps for v in v_kpc]
-    uzs = [v*np.cos(t) for t in ts for p in ps for v in v_kpc]
+    uxs = [-v*np.cos(p)*np.sin(t) for p in ps for t in ts for v in v_kpc]
+    uys = [-v*np.sin(p)*np.sin(t) for p in ps for t in ts for v in v_kpc]
+    uzs = [-v*np.cos(t) for _ in ps for t in ts for v in v_kpc]
 
     ui_array = np.array([[ux, uy, uz] for ux,uy,uz in zip(uxs,uys,uzs)])        
 
@@ -56,7 +56,7 @@ def EOMs(s, y, rho_0, M_vir):
     gradient = fct.dPsi_dxi_NFW(x_i, z, rho_0, M_vir)
 
     u_i_kpc = u_i.to(unit.kpc/unit.s)
-    dyds = [u_i_kpc.value, -(1+z)**-2 * gradient.value]
+    dyds = [u_i_kpc.value, -1/((1+z)**2) * gradient.value]
     dyds = np.reshape(dyds, (6,))
 
     return dyds
@@ -88,7 +88,7 @@ def backtrack_1_neutrino(y0_Nr):
         # Solve all 6 EOMs
         #NOTE: output as raw numbers but in [kpc, kpc/s]
         sol = solve_ivp(
-            EOMs, s_steps, y0, method='RK45',
+            fun=EOMs, t_span=s_steps, y0=y0, method='RK45',
             args=(my.rho0_NFW, my.Mvir_NFW)
             )
 
@@ -112,7 +112,12 @@ if __name__ == '__main__':
     x0 = np.array([x1, x2, x3])
 
     # Draw initial velocities.
-    ui = draw_ui(CC.PHIs, CC.THETAs, CC.Vs)
+    #NOTE: in kpc/s
+    ui = draw_ui(
+        phi_points   = CC.PHIs,
+        theta_points = CC.THETAs,
+        v_points     = CC.Vs
+        )
     
     # Combine vectors and append neutrino particle number.
     y0_Nr = np.array([np.concatenate((x0,ui[i],[i+1])) for i in range(nu_Nr)])
