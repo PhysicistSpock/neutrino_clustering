@@ -154,9 +154,8 @@ def s_of_z(z):
 
         # original H0 in units ~[1/s], we only need the value
         H0 = my.H0.to(unit.s**-1).value
-        #? H0 impacts the change of velocities significantly
 
-        a_dot = np.sqrt(my.Omega_m0*(1+z)**3 + my.Omega_L0)*H0
+        a_dot = np.sqrt(my.Omega_m0*(1+z)**3 + my.Omega_L0)#*H0
         s_int = -1/a_dot
 
         return s_int
@@ -185,7 +184,7 @@ def dPsi_dxi_NFW(x_i, z, rho_0, M_vir):
     r_s = r_vir / c_vir(z, M_vir)
     
     # distance from halo center with current coords. x_i
-    r0 = np.sqrt(np.sum(x_i**2))
+    r = np.sqrt(np.sum(x_i**2))
 
     ### This is for the whole expression as in eqn. (A.5) and using sympy
     # region
@@ -209,15 +208,17 @@ def dPsi_dxi_NFW(x_i, z, rho_0, M_vir):
 
     # endregion
 
-    m = np.minimum(r0, r_vir)
+    m = np.minimum(r, r_vir)
 
     #NOTE ratio has to be unitless, otherwise np.log yields 0.
     ratio = m.value/r_s.value
 
     prefactor = -4*np.pi*const.G*rho_0*r_s**2 * np.log(1+(ratio)) * r_s
-    derivative = (-1) * prefactor / r0**2
+    derivative = (-1) * prefactor / r**2
 
-    derivative_vector = derivative * x_i/r0
+    #! Take absolute value of position coord. x_i, we want only the magnitude
+    #! of the derivative. 
+    derivative_vector = derivative * np.abs(x_i)/r
 
     return derivative_vector.to(unit.kpc/unit.s**2)
 
