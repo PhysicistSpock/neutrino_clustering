@@ -96,7 +96,7 @@ def backtrack_1_neutrino(y0_Nr):
 
         # Solve all 6 EOMs
         #NOTE: output as raw numbers but in [kpc, kpc/s]
-        sol = solve_ivp(fun=EOMs, t_span=s_steps, y0=y0, method='RK45')
+        sol = solve_ivp(fun=EOMs, t_span=s_steps, y0=y0, method='LSODA')
 
         # Overwrite current vector with new one.
         y0 = np.array([sol.y[0:3,-1], sol.y[3:6,-1]]).flatten()
