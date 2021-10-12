@@ -42,9 +42,11 @@ if __name__ == '__main__':
 
     n_nus = np.load('neutrino_data/number_densities.npy')
 
+    neutrinos = CC.NR_OF_NEUTRINOS
+
     n0 = 56  # standard neutrino number density
-    plt.loglog(mass_range_eV*1e3, n_nus/n0)
-    plt.title('NFW only')
+    plt.loglog(mass_range_eV*1e3, (n_nus/n0))
+    plt.title(f'NFW only - {neutrinos} neutrinos')
     plt.xlabel(r'$m_{\nu}$ [meV]')
     plt.ylabel(r'$n_{\nu} / n_{\nu, 0}$')
-    plt.show()
+    plt.savefig(f'check_plots/densities_{neutrinos}_nus.pdf')

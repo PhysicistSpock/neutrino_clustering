@@ -154,10 +154,8 @@ def s_of_z(z):
 
         # original H0 in units ~[1/s], we only need the value
         H0 = my.H0.to(unit.s**-1).value
-        #! H0 makes value of s very large and code slower.
-        #? leaving it out makes no difference in results, why?
 
-        a_dot = np.sqrt(my.Omega_m0*(1+z) + my.Omega_L0*(1+z)**-2) #*H0
+        a_dot = np.sqrt(my.Omega_m0*(1+z)**3 + my.Omega_L0)#*H0
         s_int = -1/a_dot
 
         return s_int
@@ -178,7 +176,7 @@ def dPsi_dxi_NFW(x_i, z, rho_0, M_vir):
 
     Returns:
         array: Derivative vector of grav. potential. for all 3 spatial coords.
-               with units of acceleration
+               with units of acceleration.
     """    
 
     # compute values dependent on redshift
@@ -186,7 +184,7 @@ def dPsi_dxi_NFW(x_i, z, rho_0, M_vir):
     r_s = r_vir / c_vir(z, M_vir)
     
     # distance from halo center with current coords. x_i
-    r0 = np.sqrt(np.sum(x_i**2))
+    r = np.sqrt(np.sum(x_i**2))
 
     ### This is for the whole expression as in eqn. (A.5) and using sympy
     # region
@@ -210,14 +208,17 @@ def dPsi_dxi_NFW(x_i, z, rho_0, M_vir):
 
     # endregion
 
-    m = np.minimum(r0, r_vir)
+    m = np.minimum(r, r_vir)
 
     #NOTE ratio has to be unitless, otherwise np.log yields 0.
     ratio = m.value/r_s.value
 
     prefactor = -4*np.pi*const.G*rho_0*r_s**2 * np.log(1+(ratio)) * r_s
-    derivative = prefactor / r0**2
-    derivative_vector = derivative * x_i/r0
+    derivative = (-1) * prefactor / r**2
+
+    #! Take absolute value of position coord. x_i, we want only the magnitude
+    #! of the derivative. 
+    derivative_vector = derivative * np.abs(x_i)/r
 
     return derivative_vector.to(unit.kpc/unit.s**2)
 
@@ -228,7 +229,6 @@ def Fermi_Dirac(p):
 
     Args:
         p (array): magnitude of momentum, must be in eV!
-        m_nu (float): mass of particle species
 
     Returns:
         array: Value of Fermi-Dirac distr. at p.
@@ -236,7 +236,7 @@ def Fermi_Dirac(p):
 
     
     #NOTE: Temp. at z_back is higher than T_nu today.
-    T_zback_eV = my.T_nu.to(unit.eV, unit.temperature_energy())*(1+CC.Z_STOP)
+    T_zback_eV = my.T_nu_eV*(1+CC.Z_STOP)
 
     # Plug into Fermi-Dirac distribution 
     arg_of_exp = p/T_zback_eV
