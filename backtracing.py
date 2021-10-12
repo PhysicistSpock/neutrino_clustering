@@ -39,7 +39,7 @@ def draw_ui(phi_points, theta_points, v_points):
     return ui_array 
 
 
-def EOMs(s, y, rho_0, M_vir):
+def EOMs(s, y):
     """Equations of motion for all x_i's and u_i's in terms of s."""
 
     # initialize vector and bestow units
@@ -53,7 +53,7 @@ def EOMs(s, y, rho_0, M_vir):
     else:
         z = z_steps[0]
 
-    gradient = fct.dPsi_dxi_NFW(x_i, z, rho_0, M_vir)
+    gradient = fct.dPsi_dxi_NFW(x_i, z, my.rho0_NFW, my.Mvir_NFW)
 
     #? do we have to specify if we want to increase or decrease the velocity,
     #? depending on where it is pointing (i.e. current velocity sign)?
@@ -65,7 +65,7 @@ def EOMs(s, y, rho_0, M_vir):
     '''
 
     u_i_kpc = u_i.to(unit.kpc/unit.s)
-    dyds = [u_i_kpc.value, -1/((1+z)**2) * gradient.value]
+    dyds = [-u_i_kpc.value, 1/((1+z)**2) * gradient.value]
     dyds = np.reshape(dyds, (6,))
 
     return dyds
@@ -96,10 +96,7 @@ def backtrack_1_neutrino(y0_Nr):
 
         # Solve all 6 EOMs
         #NOTE: output as raw numbers but in [kpc, kpc/s]
-        sol = solve_ivp(
-            fun=EOMs, t_span=s_steps, y0=y0, method='RK45',
-            args=(my.rho0_NFW, my.Mvir_NFW)
-            )
+        sol = solve_ivp(fun=EOMs, t_span=s_steps, y0=y0, method='RK45')
 
         # Overwrite current vector with new one.
         y0 = np.array([sol.y[0:3,-1], sol.y[3:6,-1]]).flatten()
