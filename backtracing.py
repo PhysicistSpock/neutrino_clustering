@@ -54,7 +54,8 @@ def EOMs(s, y):
         z = z_steps[0]
 
     # Gradient value will always be positive.
-    gradient = fct.dPsi_dxi_NFW(x_i, z, my.rho0_NFW, my.Mvir_NFW)
+    gradient = fct.dPsi_dxi_NFW(x_i, z, my.rho0_NFW, my.Mvir_NFW).value
+
 
     #? I think the gradient has to be different for:
     #? 1. when the particle is on the positive axis and
@@ -64,11 +65,28 @@ def EOMs(s, y):
     #! this is because the particle will sometimes and sometimes not
     #! point towards or away from the GC
 
-    u_i_kpc = u_i.to(unit.kpc/unit.s)
-    dyds = [u_i_kpc.value, -1/((1+z)**2) * gradient.value]
-    dyds = np.reshape(dyds, (6,))
+    signs = np.zeros(3)
+    for i, (pos, vel) in enumerate(zip(x_i, u_i)):
+        if pos > 0. and vel > 0.:
+            signs[i] = -1
+        elif pos > 0. and vel < 0.:
+            signs[i] = +1
+        elif pos < 0. and vel > 0.:
+            signs[i] = +1
+        else:  # pos < 0. and vel < 0.
+            signs[i] = -1
 
-    return dyds
+    u_i_kpc = u_i.to(unit.kpc/unit.s).value
+    dyds = np.array([
+        u_i_kpc[0], 
+        u_i_kpc[1], 
+        u_i_kpc[2], 
+        signs[0] * 1/((1+z)**2) * gradient[0],
+        signs[1] * 1/((1+z)**2) * gradient[1],
+        signs[2] * 1/((1+z)**2) * gradient[2],
+        ])
+
+    return np.array(dyds).flatten()
 
 
 def backtrack_1_neutrino(y0_Nr):
@@ -128,10 +146,14 @@ if __name__ == '__main__':
     # Combine vectors and append neutrino particle number.
     y0_Nr = np.array([np.concatenate((x0,ui[i],[i+1])) for i in range(nu_Nr)])
 
+    backtrack_1_neutrino(y0_Nr[34])
+
+
+
     # Run simulation on multiple cores.
-    Processes = 16
-    with ProcessPoolExecutor(Processes) as ex:
-        ex.map(backtrack_1_neutrino, y0_Nr)  
+    # Processes = 16
+    # with ProcessPoolExecutor(Processes) as ex:
+    #     ex.map(backtrack_1_neutrino, y0_Nr)  
 
 
     print('Execution time:', time.time()-start, 'seconds.')
