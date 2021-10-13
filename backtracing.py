@@ -56,6 +56,14 @@ def EOMs(s, y):
     # Gradient value will always be positive.
     gradient = fct.dPsi_dxi_NFW(x_i, z, my.rho0_NFW, my.Mvir_NFW)
 
+    #? I think the gradient has to be different for:
+    #? 1. when the particle is on the positive axis and
+    #?    - velocity is negative
+    #?    - velocity is postive
+    #? 2. same but when particle is on negative part of axis
+    #! this is because the particle will sometimes and sometimes not
+    #! point towards or away from the GC
+
     u_i_kpc = u_i.to(unit.kpc/unit.s)
     dyds = [u_i_kpc.value, -1/((1+z)**2) * gradient.value]
     dyds = np.reshape(dyds, (6,))
