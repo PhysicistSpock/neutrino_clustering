@@ -69,15 +69,12 @@ def EOMs(s, y):
         else:  # pos < 0. and vel < 0.
             signs[i] = +1
 
+    # Create dx/ds and du/ds, i.e. the r.h.s of the eqns. of motion. 
     u_i_kpc = u_i.to(unit.kpc/unit.s).value
     dyds = CC.TIME_FLOW * np.array([
-        u_i_kpc[0], 
-        u_i_kpc[1], 
-        u_i_kpc[2], 
-        signs[0] * 1/((1+z)**2) * gradient[0],
-        signs[1] * 1/((1+z)**2) * gradient[1],
-        signs[2] * 1/((1+z)**2) * gradient[2],
-        ])
+        u_i_kpc, signs * 1/((1+z)**2) * gradient
+    ])
+    dyds = np.reshape(dyds, (6,))
 
     return dyds
 
@@ -107,7 +104,7 @@ def backtrack_1_neutrino(y0_Nr):
 
         # Solve all 6 EOMs
         #NOTE: output as raw numbers but in [kpc, kpc/s]
-        sol = solve_ivp(fun=EOMs, t_span=s_steps, y0=y0, method='RK23')
+        sol = solve_ivp(fun=EOMs, t_span=s_steps, y0=y0, method=CC.SOLVER)
 
         # Overwrite current vector with new one.
         y0 = np.array([sol.y[0:3,-1], sol.y[3:6,-1]]).flatten()
@@ -138,6 +135,10 @@ if __name__ == '__main__':
     
     # Combine vectors and append neutrino particle number.
     y0_Nr = np.array([np.concatenate((x0,ui[i],[i+1])) for i in range(nu_Nr)])
+
+
+    ### Test 1 Neutrino.
+    # backtrack_1_neutrino(y0_Nr[0])
 
     # Run simulation on multiple cores.
     Processes = 16
