@@ -56,28 +56,21 @@ def EOMs(s, y):
     # Gradient value will always be positive.
     gradient = fct.dPsi_dxi_NFW(x_i, z, my.rho0_NFW, my.Mvir_NFW).value
 
-
-    #? I think the gradient has to be different for:
-    #? 1. when the particle is on the positive axis and
-    #?    - velocity is negative
-    #?    - velocity is postive
-    #? 2. same but when particle is on negative part of axis
-    #! this is because the particle will sometimes and sometimes not
-    #! point towards or away from the GC
-
+    #NOTE: Velocity has to change according to the pointing direction,
+    #NOTE: treat all 4 cases seperately.
     signs = np.zeros(3)
     for i, (pos, vel) in enumerate(zip(x_i, u_i)):
         if pos > 0. and vel > 0.:
             signs[i] = -1
         elif pos > 0. and vel < 0.:
-            signs[i] = +1
+            signs[i] = -1
         elif pos < 0. and vel > 0.:
             signs[i] = +1
         else:  # pos < 0. and vel < 0.
-            signs[i] = -1
+            signs[i] = +1
 
     u_i_kpc = u_i.to(unit.kpc/unit.s).value
-    dyds = np.array([
+    dyds = CC.TIME_FLOW * np.array([
         u_i_kpc[0], 
         u_i_kpc[1], 
         u_i_kpc[2], 
@@ -86,7 +79,7 @@ def EOMs(s, y):
         signs[2] * 1/((1+z)**2) * gradient[2],
         ])
 
-    return np.array(dyds).flatten()
+    return dyds
 
 
 def backtrack_1_neutrino(y0_Nr):
@@ -114,7 +107,7 @@ def backtrack_1_neutrino(y0_Nr):
 
         # Solve all 6 EOMs
         #NOTE: output as raw numbers but in [kpc, kpc/s]
-        sol = solve_ivp(fun=EOMs, t_span=s_steps, y0=y0, method='LSODA')
+        sol = solve_ivp(fun=EOMs, t_span=s_steps, y0=y0, method='RK23')
 
         # Overwrite current vector with new one.
         y0 = np.array([sol.y[0:3,-1], sol.y[3:6,-1]]).flatten()
@@ -146,14 +139,10 @@ if __name__ == '__main__':
     # Combine vectors and append neutrino particle number.
     y0_Nr = np.array([np.concatenate((x0,ui[i],[i+1])) for i in range(nu_Nr)])
 
-    backtrack_1_neutrino(y0_Nr[34])
-
-
-
     # Run simulation on multiple cores.
-    # Processes = 16
-    # with ProcessPoolExecutor(Processes) as ex:
-    #     ex.map(backtrack_1_neutrino, y0_Nr)  
+    Processes = 16
+    with ProcessPoolExecutor(Processes) as ex:
+        ex.map(backtrack_1_neutrino, y0_Nr)  
 
 
     print('Execution time:', time.time()-start, 'seconds.')
