@@ -6,6 +6,7 @@ THETAs = 3
 Vs = 3
 NR_OF_NEUTRINOS = PHIs*THETAs*Vs
 NU_MASS = 0.05*unit.eV
+NU_MASS_KG = NU_MASS.to(unit.kg, unit.mass_energy())
 
 # Redshift integration parameters
 Z_START, Z_STOP, Z_AMOUNT = 0., 4., 100

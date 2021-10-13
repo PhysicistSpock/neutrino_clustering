@@ -12,10 +12,12 @@ def number_density_1_mass(m_nu_eV):
     # load initial and final velocity
     u0 = [np.load(f'neutrino_vectors/nu_{Nr+1}.npy')[0][3:6] for Nr in Ns]
     u1 = [np.load(f'neutrino_vectors/nu_{Nr+1}.npy')[-1][3:6] for Nr in Ns]
+    print(np.array(u1).shape)
 
-    # intermediate arrays
+    # magnitude of velocities
     a0 = np.array([np.sqrt(np.sum(u**2)) for u in np.array(u0)])
     a1 = np.array([np.sqrt(np.sum(u**2)) for u in np.array(u1)])
+    print(a1.shape)
 
     # convert mass(es) from eV to kg
     m_nu_kg = m_nu_eV.to(unit.kg, unit.mass_energy())
