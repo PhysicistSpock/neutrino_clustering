@@ -53,19 +53,11 @@ def EOMs(s, y):
     else:
         z = z_steps[0]
 
+    # Gradient value will always be positive.
     gradient = fct.dPsi_dxi_NFW(x_i, z, my.rho0_NFW, my.Mvir_NFW)
 
-    #? do we have to specify if we want to increase or decrease the velocity,
-    #? depending on where it is pointing (i.e. current velocity sign)?
-
-    '''
-    if magn(v) <0:
-        derivative negative
-    and opposite...
-    '''
-
     u_i_kpc = u_i.to(unit.kpc/unit.s)
-    dyds = [-u_i_kpc.value, 1/((1+z)**2) * gradient.value]
+    dyds = [u_i_kpc.value, -1/((1+z)**2) * gradient.value]
     dyds = np.reshape(dyds, (6,))
 
     return dyds
