@@ -185,6 +185,8 @@ def dPsi_dxi_NFW(x_i, z, rho_0, M_vir):
     
     # distance from halo center with current coords. x_i
     r = np.sqrt(np.sum(x_i**2))
+    if r == 0.:
+        r = 0.01  # avoid singularity
 
     ### This is for the whole expression as in eqn. (A.5) and using sympy
     # region
