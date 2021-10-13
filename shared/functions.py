@@ -239,6 +239,7 @@ def Fermi_Dirac(p):
     
     #NOTE: Temp. at z_back is higher than T_nu today.
     T_zback_eV = my.T_nu_eV*(1+CC.Z_STOP)
+    # T_zback_eV = my.T_nu_eV*(1)  # Today, used for testing Fermi-Dirac shape
 
     # Plug into Fermi-Dirac distribution 
     arg_of_exp = p/T_zback_eV

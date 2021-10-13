@@ -1,9 +1,9 @@
 from shared.preface import *
 
 
-PHIs = 5
-THETAs = 3
-Vs = 3
+PHIs = 10
+THETAs = 10
+Vs = 10
 NR_OF_NEUTRINOS = PHIs*THETAs*Vs
 NU_MASS = 0.05*unit.eV
 NU_MASS_KG = NU_MASS.to(unit.kg, unit.mass_energy())
