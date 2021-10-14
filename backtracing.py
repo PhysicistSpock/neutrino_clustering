@@ -74,6 +74,7 @@ def EOMs(s, y):
     dyds = CC.TIME_FLOW * np.array([
         (1/(1+z))*u_i_kpc, signs * 1/((1+z)**3) * gradient
     ])
+    
     dyds = np.reshape(dyds, (6,))
 
     return dyds
