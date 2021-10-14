@@ -1,8 +1,8 @@
 from shared.preface import *
 
 
-PHIs = 5
-THETAs = 5
+PHIs = 10
+THETAs = 10
 Vs = 100
 NR_OF_NEUTRINOS = PHIs*THETAs*Vs
 NU_MASS = 0.05*unit.eV

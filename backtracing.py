@@ -72,7 +72,7 @@ def EOMs(s, y):
     # Create dx/ds and du/ds, i.e. the r.h.s of the eqns. of motion. 
     u_i_kpc = u_i.to(unit.kpc/unit.s).value
     dyds = CC.TIME_FLOW * np.array([
-        (1/(1+z))*u_i_kpc, signs * 1/((1+z)**3) * gradient
+        u_i_kpc, signs * 1/((1+z)**2) * gradient
     ])
     
     dyds = np.reshape(dyds, (6,))
