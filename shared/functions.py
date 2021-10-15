@@ -254,7 +254,6 @@ def number_density(p0, p_back):
     Args:
         p0 (array): neutrino momentum today
         p_back (array): neutrino momentum at z_back (final redshift in sim.)
-        m_nu (float): mass of particle species
 
     Returns:
         array: Value of relic neutrino number density.
@@ -263,7 +262,7 @@ def number_density(p0, p_back):
     g = 1  #? 6 degrees of freedom: flavour and particle/anti-particle
 
     # convert momenta from kg*kpc/s to eV
-    to_eV = 1/(5.3442883e-28)
+    to_eV = 1/(5.344286e-28)
     p0 = p0.to(unit.kg*unit.m/unit.s).value * to_eV
     p_back = p_back.to(unit.kg*unit.m/unit.s).value * to_eV
 
@@ -281,8 +280,8 @@ def number_density(p0, p_back):
     n = const * np.trapz(p0_sort.value**2 * FDvals, p0_sort.value)
 
     # convert n from eV**3 to 1/cm**3
-    ev_m3 = 1/(1.9732705e-7)
-    n_m3 = n * ev_m3**3 * (1/unit.m**3)
+    eV_to_mneg1 = (1/1.97327e-7)
+    n_m3 = n * eV_to_mneg1**3 * (1/unit.m**3)
     n_cm3 = n_m3.to(1/unit.cm**3)
 
     return n_cm3

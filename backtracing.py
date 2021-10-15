@@ -9,7 +9,7 @@ def draw_ui(phi_points, theta_points, v_points):
     """Get initial velocities for the neutrinos."""
     
     # conversion factor for limits
-    cf = 5.3442883e-28 / CC.NU_MASS.to(unit.kg, unit.mass_energy()).value
+    cf = 5.3442883e-28 / CC.NU_MASS_KG.value
     T_nu_eV = my.T_nu.to(unit.eV, unit.temperature_energy()).value
     
     # limits on velocity
@@ -30,6 +30,7 @@ def draw_ui(phi_points, theta_points, v_points):
     ps = np.linspace(0., 2.*np.pi, phi_points)
     ts = np.linspace(0.+eps, np.pi-eps, theta_points)
 
+    # Minus sign for all due to choice of coord. system setup (see drawings).
     uxs = [-v*np.cos(p)*np.sin(t) for p in ps for t in ts for v in v_kpc]
     uys = [-v*np.sin(p)*np.sin(t) for p in ps for t in ts for v in v_kpc]
     uzs = [-v*np.cos(t) for _ in ps for t in ts for v in v_kpc]
