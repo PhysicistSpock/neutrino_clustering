@@ -57,7 +57,7 @@ def c_vir(z, M_vir):
 
 def rho_crit(z):
     """Critical density of the universe as a function of redshift, assuming
-    matter domination, only Omega_m and Omega_k in Friedmann equation. See 
+    matter domination, only Omega_m and Omega_Lambda in Friedmann equation. See 
     notes for derivation.
 
     Args:
@@ -248,12 +248,12 @@ def Fermi_Dirac(p, z_back):
     return f_of_p
 
 
-def number_density(p0, p_back, z_back):
+def number_density(p0, p1, z_back):
     """Neutrino number density obtained by integration over initial momenta.
 
     Args:
         p0 (array): neutrino momentum today
-        p_back (array): neutrino momentum at z_back (final redshift in sim.)
+        p1 (array): neutrino momentum at z_back (final redshift in sim.)
 
     Returns:
         array: Value of relic neutrino number density.
@@ -262,18 +262,22 @@ def number_density(p0, p_back, z_back):
     g = 1  #? 6 degrees of freedom: flavour and particle/anti-particle
 
     # convert momenta from kg*kpc/s to eV
-    to_eV = 1/(5.344286e-28)
-    p0 = p0.to(unit.kg*unit.m/unit.s).value * to_eV
-    p_back = p_back.to(unit.kg*unit.m/unit.s).value * to_eV
+    p0 = p0.to(unit.kg*unit.m/unit.s)
+    p1 = p1.to(unit.kg*unit.m/unit.s)
 
+    cf = (1/5.344286e-19)*const.c.value
+    p0 = p0.value*cf
+    p1 = p1.value*cf
+
+    
     #NOTE: trapz integral method needs sorted (ascending) arrays
     order = p0.argsort()
-    p0_sort, p_back_sort = p0[order]*unit.eV, p_back[order]*unit.eV
+    p0_sort, p1_sort = p0[order]*unit.eV, p1[order]*unit.eV
     #! Fermi_Dirac function needs p to have units of eV attached
 
     # precomputed factors
     prefactor = g/(2*np.pi**2)
-    FDvals = Fermi_Dirac(p_back_sort, z_back)
+    FDvals = Fermi_Dirac(p1_sort, z_back)
 
     #NOTE: n ~ integral dp p**2 f(p), the units come from dp p**2, which have
     #NOTE: eV*3 = 1/eV**-3 ~ 1/length**3
@@ -282,38 +286,5 @@ def number_density(p0, p_back, z_back):
     # convert n from eV**3 (also by hc actually) to 1/cm**3
     ev_by_hc_to_cm_neg1 = (1/const.h/const.c).to(1/unit.cm/unit.eV)
     n_cm3 = n * ev_by_hc_to_cm_neg1.value**3 / unit.cm**3
-
-    return n_cm3
-
-
-def number_density_eV(p0, p_back, z_back):
-    """Neutrino number density obtained by integration over initial momenta.
-
-    Args:
-        p0 (array): neutrino momentum today
-        p_back (array): neutrino momentum at z_back (final redshift in sim.)
-
-    Returns:
-        array: Value of relic neutrino number density.
-    """    
-
-    g = 1  #? 6 degrees of freedom: flavour and particle/anti-particle
-
-    #NOTE: trapz integral method needs sorted (ascending) arrays
-    order = p0.value.argsort()
-    p0_sort, p_back_sort = p0[order], p_back[order]
-
-    # precomputed factors
-    const = g/(2*np.pi**2)
-    FDvals = Fermi_Dirac(p_back_sort, z_back)
-
-    #NOTE: n ~ integral dp p**2 f(p), the units come from dp p**2, which have
-    #NOTE: eV*3 = 1/eV**-3 ~ 1/length**3
-    n = const * np.trapz(p0_sort.value**2 * FDvals, p0_sort.value)
-
-    # convert n from eV**3 to 1/cm**3
-    eV_to_mneg1 = (1/1.97327e-7)
-    n_m3 = n * eV_to_mneg1**3 * (1/unit.m**3)
-    n_cm3 = n_m3.to(1/unit.cm**3)
 
     return n_cm3

@@ -81,25 +81,24 @@ def backtrack_1_neutrino(y0_Nr):
 
     global z_steps, s_steps, Nr  # so other functions can use these variables
 
-    # Split input into initial vector and neutrino number
+    # Split input into initial vector and neutrino number.
     y0, Nr = y0_Nr[0:-1], y0_Nr[-1]
 
-    # Redshifts to integrate over
-    # zeds = np.linspace(CC.Z_START, CC.Z_STOP, CC.Z_AMOUNT)  # linear
+    # Redshifts to integrate over.
     zeds = np.geomspace(1e-10, CC.Z_STOP, CC.Z_AMOUNT)  # log
 
-    # solutions array with initial and final vector for 1 neutrino
+    # Solutions array with initial and final vector for 1 neutrino.
     sols = []
     sols.append(y0)  # save initial vector
 
     for zi in range(len(zeds)-1):
 
-        # Redshift and converted time variable s
+        # Redshift and converted time variable s.
         z0, z1 = zeds[zi], zeds[zi+1]
         z_steps = np.array([z0, z1])
         s_steps = np.array([fct.s_of_z(z0), fct.s_of_z(z1)])     
 
-        # Solve all 6 EOMs
+        # Solve all 6 EOMs.
         #NOTE: output as raw numbers but in [kpc, kpc/s]
         sol = solve_ivp(fun=EOMs, t_span=s_steps, y0=y0, method=CC.SOLVER)
 
@@ -114,7 +113,7 @@ def backtrack_1_neutrino(y0_Nr):
 if __name__ == '__main__':
     start = time.time()
 
-    #! Amount of neutrinos to simulate
+    # Amount of neutrinos to simulate.
     nu_Nr = CC.NR_OF_NEUTRINOS
 
     # Position of earth w.r.t Milky Way NFW halo center.
