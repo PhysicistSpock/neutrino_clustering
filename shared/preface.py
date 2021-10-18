@@ -28,3 +28,7 @@ import matplotlib.colors as colors
 import matplotlib.ticker as ticker
 import matplotlib.patches as mpatches
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+
+
+plt.rc('axes', labelsize=11)
+plt.rc('axes', titlesize=13)

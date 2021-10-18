@@ -285,3 +285,36 @@ def number_density(p0, p_back):
     n_cm3 = n_m3.to(1/unit.cm**3)
 
     return n_cm3
+
+
+def number_density_eV(p0, p_back):
+    """Neutrino number density obtained by integration over initial momenta.
+
+    Args:
+        p0 (array): neutrino momentum today
+        p_back (array): neutrino momentum at z_back (final redshift in sim.)
+
+    Returns:
+        array: Value of relic neutrino number density.
+    """    
+
+    g = 1  #? 6 degrees of freedom: flavour and particle/anti-particle
+
+    #NOTE: trapz integral method needs sorted (ascending) arrays
+    order = p0.value.argsort()
+    p0_sort, p_back_sort = p0[order], p_back[order]
+
+    # precomputed factors
+    const = g/(2*np.pi**2)
+    FDvals = Fermi_Dirac(p_back_sort)
+
+    #NOTE: n ~ integral dp p**2 f(p), the units come from dp p**2, which have
+    #NOTE: eV*3 = 1/eV**-3 ~ 1/length**3
+    n = const * np.trapz(p0_sort.value**2 * FDvals, p0_sort.value)
+
+    # convert n from eV**3 to 1/cm**3
+    eV_to_mneg1 = (1/1.97327e-7)
+    n_m3 = n * eV_to_mneg1**3 * (1/unit.m**3)
+    n_cm3 = n_m3.to(1/unit.cm**3)
+
+    return n_cm3

@@ -2,7 +2,7 @@ from shared.preface import *
 
 
 T_nu      = 1.95*unit.K                # Relic neutrino temp. today
-T_nu_eV = T_nu.to(unit.eV, unit.temperature_energy())
+T_nu_eV   = T_nu.to(unit.eV, unit.temperature_energy())
 
 # Cosmology - Mertsch et al. (2020)
 Omega_m0  = 0.3111                     # Matter-energy density today
