@@ -8,20 +8,15 @@ import shared.control_center as CC
 def draw_ui(phi_points, theta_points, v_points):
     """Get initial velocities for the neutrinos."""
     
-    # conversion factor for limits
-    cf = 5.3442883e-28 / CC.NU_MASS_KG.value
-    T_nu_eV = my.T_nu.to(unit.eV, unit.temperature_energy()).value
-    
-    # limits on velocity
-    lower = 0.01*T_nu_eV*cf * unit.m/unit.s
-    upper = 10*T_nu_eV*cf * unit.m/unit.s
+    # Conversion factor for limits.
+    cf = my.T_nu_eV.to(unit.J) / CC.NU_MASS_KG / const.c
 
-    # convert to km/s
-    low, up = lower.to(unit.km/unit.s).value, upper.to(unit.km/unit.s).value
+    # Limits on velocity.
+    lower = 0.01 * cf.to(my.Uunit)
+    upper = 10 * cf.to(my.Uunit)
 
-    # Initial magnitudes of the velocities
-    v_km = np.geomspace(low, up, v_points)*unit.km/unit.s
-    v_kpc = v_km.to(unit.kpc/unit.s).value
+    # Initial magnitudes of the velocities.
+    v_kpc = np.geomspace(lower.value, upper.value, v_points)
 
     # Split up this magnitude into velocity components
     #NOTE: done by using spher. coords. trafos, which act as "weights"
@@ -71,7 +66,7 @@ def EOMs(s, y):
             signs[i] = +1
 
     # Create dx/ds and du/ds, i.e. the r.h.s of the eqns. of motion. 
-    u_i_kpc = u_i.to(unit.kpc/unit.s).value
+    u_i_kpc = u_i.to(my.Uunit).value
     dyds = CC.TIME_FLOW * np.array([
         (1/(1+z))*u_i_kpc, signs * 1/((1+z)**3) * gradient
     ])

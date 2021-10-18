@@ -225,7 +225,7 @@ def dPsi_dxi_NFW(x_i, z, rho_0, M_vir):
     return derivative_vector.to(unit.kpc/unit.s**2)
 
 
-def Fermi_Dirac(p):
+def Fermi_Dirac(p, z_back):
     """Fermi-Dirac phase-space distribution for CNB neutrinos. 
     Zero chem. potential and temp. T_nu (CNB temp. today). 
 
@@ -238,7 +238,7 @@ def Fermi_Dirac(p):
 
     
     #NOTE: Temp. at z_back is higher than T_nu today.
-    T_zback_eV = my.T_nu_eV*(1+CC.Z_STOP)
+    T_zback_eV = my.T_nu_eV*(1+z_back)
     # T_zback_eV = my.T_nu_eV*(1)  # Today, used for testing Fermi-Dirac shape
 
     # Plug into Fermi-Dirac distribution 
@@ -248,7 +248,7 @@ def Fermi_Dirac(p):
     return f_of_p
 
 
-def number_density(p0, p_back):
+def number_density(p0, p_back, z_back):
     """Neutrino number density obtained by integration over initial momenta.
 
     Args:
@@ -272,22 +272,21 @@ def number_density(p0, p_back):
     #! Fermi_Dirac function needs p to have units of eV attached
 
     # precomputed factors
-    const = g/(2*np.pi**2)
-    FDvals = Fermi_Dirac(p_back_sort)
+    prefactor = g/(2*np.pi**2)
+    FDvals = Fermi_Dirac(p_back_sort, z_back)
 
     #NOTE: n ~ integral dp p**2 f(p), the units come from dp p**2, which have
     #NOTE: eV*3 = 1/eV**-3 ~ 1/length**3
-    n = const * np.trapz(p0_sort.value**2 * FDvals, p0_sort.value)
+    n = prefactor * np.trapz(p0_sort.value**2 * FDvals, p0_sort.value)
 
-    # convert n from eV**3 to 1/cm**3
-    eV_to_mneg1 = (1/1.97327e-7)
-    n_m3 = n * eV_to_mneg1**3 * (1/unit.m**3)
-    n_cm3 = n_m3.to(1/unit.cm**3)
+    # convert n from eV**3 (also by hc actually) to 1/cm**3
+    ev_by_hc_to_cm_neg1 = (1/const.h/const.c).to(1/unit.cm/unit.eV)
+    n_cm3 = n * ev_by_hc_to_cm_neg1.value**3 / unit.cm**3
 
     return n_cm3
 
 
-def number_density_eV(p0, p_back):
+def number_density_eV(p0, p_back, z_back):
     """Neutrino number density obtained by integration over initial momenta.
 
     Args:
@@ -306,7 +305,7 @@ def number_density_eV(p0, p_back):
 
     # precomputed factors
     const = g/(2*np.pi**2)
-    FDvals = Fermi_Dirac(p_back_sort)
+    FDvals = Fermi_Dirac(p_back_sort, z_back)
 
     #NOTE: n ~ integral dp p**2 f(p), the units come from dp p**2, which have
     #NOTE: eV*3 = 1/eV**-3 ~ 1/length**3
