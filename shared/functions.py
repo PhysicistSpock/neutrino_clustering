@@ -239,7 +239,6 @@ def Fermi_Dirac(p, z_back):
     
     #NOTE: Temp. at z_back is higher than T_nu today.
     T_zback_eV = my.T_nu_eV*(1+z_back)
-    # T_zback_eV = my.T_nu_eV*(1)  # Today, used for testing Fermi-Dirac shape
 
     # Plug into Fermi-Dirac distribution 
     arg_of_exp = p/T_zback_eV
@@ -260,24 +259,14 @@ def number_density(p0, p1, z_back):
     """    
 
     g = 1  #? 6 degrees of freedom: flavour and particle/anti-particle
-
-    # convert momenta from kg*kpc/s to eV
-    p0 = p0.to(unit.kg*unit.m/unit.s)
-    p1 = p1.to(unit.kg*unit.m/unit.s)
-
-    cf = (1/5.344286e-19)*const.c.value
-    p0 = p0.value*cf
-    p1 = p1.value*cf
-
     
     #NOTE: trapz integral method needs sorted (ascending) arrays
     order = p0.argsort()
-    p0_sort, p1_sort = p0[order]*unit.eV, p1[order]*unit.eV
-    #! Fermi_Dirac function needs p to have units of eV attached
+    p0_sort, p1_sort = p0[order], p1[order]
 
     # precomputed factors
     prefactor = g/(2*np.pi**2)
-    FDvals = Fermi_Dirac(p1_sort, z_back)
+    FDvals = Fermi_Dirac(p1_sort, z_back)  #! needs p in [eV]
 
     #NOTE: n ~ integral dp p**2 f(p), the units come from dp p**2, which have
     #NOTE: eV*3 = 1/eV**-3 ~ 1/length**3

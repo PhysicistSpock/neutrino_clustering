@@ -38,7 +38,7 @@ def draw_ui(phi_points, theta_points, v_points):
 def EOMs(s, y):
     """Equations of motion for all x_i's and u_i's in terms of s."""
 
-    # initialize vector and bestow units
+    # initialize vector and attach astropy units
     x_i_vals, u_i_vals = np.reshape(y, (2,3))
     x_i, u_i = x_i_vals*my.Xunit, u_i_vals*my.Uunit
 
@@ -122,7 +122,7 @@ if __name__ == '__main__':
     x0 = np.array([x1, x2, x3])
 
     # Draw initial velocities.
-    #NOTE: in kpc/s
+    #NOTE: in kpc/s (without astropy unit attached)
     ui = draw_ui(
         phi_points   = CC.PHIs,
         theta_points = CC.THETAs,
