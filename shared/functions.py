@@ -155,7 +155,7 @@ def s_of_z(z):
         # original H0 in units ~[1/s], we only need the value
         H0 = my.H0.to(unit.s**-1).value
 
-        a_dot = np.sqrt(my.Omega_m0*(1+z)**3 + my.Omega_L0)*H0/(1+z)
+        a_dot = np.sqrt(my.Omega_m0*(1+z)**3 + my.Omega_L0)/(1+z)*H0
         s_int = 1/a_dot
 
         return s_int
