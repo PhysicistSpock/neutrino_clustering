@@ -19,9 +19,9 @@ def rho_NFW(r, rho_0, r_s):
         array: density at radius r in [Msun/kpc**3]
     """    
 
-    rho = rho_0 / (r/r_s) / np.power(1+(r/r_s), 2)
+    rho = rho_0 / (r/r_s) / np.power(1.+(r/r_s), 2.)
 
-    return rho.to(unit.M_sun/unit.kpc**3)
+    return rho.to(unit.M_sun/unit.kpc**3.)
 
 
 def c_vir(z, M_vir):
@@ -42,9 +42,9 @@ def c_vir(z, M_vir):
     b_of_z = -0.097 + 0.025*z
 
     log10_beta_c = a_of_z + \
-                   b_of_z*np.log10(M_vir / (1e12 * my.h**-1 * unit.M_sun))
+                   b_of_z*np.log10(M_vir / (1.e12 * my.h**-1. * unit.M_sun))
 
-    beta_c = np.power(log10_beta_c, 10)
+    beta_c = np.power(log10_beta_c, 10.)
 
     # beta factor calculated by using their values for scale and virial radius
     # in Table 1.
@@ -67,10 +67,10 @@ def rho_crit(z):
         array: critical density at redshift z [Msun/kpc**3]
     """    
     
-    H_squared = my.H0**2 * (my.Omega_m0*(1+z)**3 + my.Omega_L0) 
-    rho_crit = 3*H_squared / (8*np.pi*const.G)
+    H_squared = my.H0**2. * (my.Omega_m0*(1.+z)**3. + my.Omega_L0) 
+    rho_crit = 3.*H_squared / (8.*np.pi*const.G)
 
-    return rho_crit.to(unit.M_sun/unit.kpc**3)
+    return rho_crit.to(unit.M_sun/unit.kpc**3.)
 
 
 def Omega_m(z):
@@ -85,7 +85,9 @@ def Omega_m(z):
         array: matter density parameter at redshift z [dimensionless]
     """    
 
-    return np.float64((my.Omega_m0*(1+z)**3) / (1 + my.Omega_m0*((1+z)**3-1)))
+    Omega_m = (my.Omega_m0*(1.+z)**3.) / (1. + my.Omega_m0*((1.+z)**3. - 1.))
+
+    return np.float64(Omega_m)
 
 
 def Delta_vir(z):
@@ -98,7 +100,7 @@ def Delta_vir(z):
         array: value as specified just beneath eqn. (5.7) [dimensionless]
     """    
 
-    Delta_vir = 18*np.pi**2 + 82*(Omega_m(z)-1) - 39*(Omega_m(z)-1)**2
+    Delta_vir = 18.*np.pi**2. + 82.*(Omega_m(z)-1.) - 39.*(Omega_m(z)-1.)**2.
 
     return Delta_vir
 
@@ -114,7 +116,7 @@ def R_vir(z, M_vir):
         array: virial radius [kpc]
     """    
 
-    R_vir = np.power(3*M_vir / (4*np.pi*Delta_vir(z)*rho_crit(z)), 1/3)
+    R_vir = np.power(3.*M_vir / (4.*np.pi*Delta_vir(z)*rho_crit(z)), 1./3.)
 
     return R_vir.to(unit.kpc)
 
@@ -153,14 +155,14 @@ def s_of_z(z):
     def s_integrand(z):
 
         # original H0 in units ~[1/s], we only need the value
-        H0 = my.H0.to(unit.s**-1).value
+        H0 = my.H0.to(unit.s**-1.).value
 
-        a_dot = np.sqrt(my.Omega_m0*(1+z)**3 + my.Omega_L0)/(1+z)*H0
-        s_int = 1/a_dot
+        a_dot = np.sqrt(my.Omega_m0*(1.+z)**3. + my.Omega_L0)/(1.+z)*H0
+        s_int = 1./a_dot
 
         return s_int
 
-    s_of_z, _ = quad(s_integrand, 0, z)
+    s_of_z, _ = quad(s_integrand, 0., z)
 
     return np.float64(s_of_z)
 
@@ -184,7 +186,7 @@ def dPsi_dxi_NFW(x_i, z, rho_0, M_vir):
     r_s = r_vir / c_vir(z, M_vir)
     
     # distance from halo center with current coords. x_i
-    r = np.sqrt(np.sum(x_i**2))
+    r = np.sqrt(np.sum(x_i**2.))
     if r == 0.:
         r = 0.01  # avoid singularity
 
@@ -215,14 +217,14 @@ def dPsi_dxi_NFW(x_i, z, rho_0, M_vir):
     #NOTE ratio has to be unitless, otherwise np.log yields 0.
     ratio = m.value/r_s.value
 
-    prefactor = -4*np.pi*const.G*rho_0*r_s**2 * np.log(1+(ratio)) * r_s
-    derivative = (-1) * prefactor / r**2
+    prefactor = -4.*np.pi*const.G*rho_0*r_s**2. * np.log(1.+(ratio)) * r_s
+    derivative = (-1.) * prefactor / r**2.
 
     #! Take absolute value of position coord. x_i, we want only the magnitude
     #! of the derivative. 
     derivative_vector = derivative * np.abs(x_i)/r
 
-    return derivative_vector.to(unit.kpc/unit.s**2)
+    return derivative_vector.to(unit.kpc/unit.s**2.)
 
 
 def Fermi_Dirac(p, z_back):
@@ -266,15 +268,15 @@ def number_density(p0, p1, z_back):
     p0_sort, p1_sort = p0[order], p1[order]
 
     # precomputed factors
-    prefactor = g/(2.*np.pi**2)
+    prefactor = g/(2.*np.pi**2.)
     FDvals = Fermi_Dirac(p1_sort, z_back)  #! needs p in [eV]
 
     #NOTE: n ~ integral dp p**2 f(p), the units come from dp p**2, which have
     #NOTE: eV*3 = 1/eV**-3 ~ 1/length**3
-    n = prefactor * np.trapz(p0_sort.value**2 * FDvals, p0_sort.value)
+    n = prefactor * np.trapz(p0_sort.value**2. * FDvals, p0_sort.value)
 
     # convert n from eV**3 (also by hc actually) to 1/cm**3
     ev_by_hc_to_cm_neg1 = (1./const.h/const.c).to(1./unit.cm/unit.eV)
-    n_cm3 = n * ev_by_hc_to_cm_neg1.value**3 / unit.cm**3
+    n_cm3 = n * ev_by_hc_to_cm_neg1.value**3. / unit.cm**3.
 
     return n_cm3

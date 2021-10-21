@@ -12,7 +12,7 @@ NU_MASS_KG = NU_MASS.to(unit.kg, unit.mass_energy())
 Z_START, Z_STOP, Z_AMOUNT = 0., 4., 100
 
 # Control if simulation runs forwards (+1) or backwards (-1) in time. 
-TIME_FLOW = -1
+TIME_FLOW = -1.
 
 # Integration method
 SOLVER = 'LSODA'

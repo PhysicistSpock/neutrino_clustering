@@ -13,7 +13,7 @@ def draw_ui(phi_points, theta_points, v_points):
 
     # Limits on velocity.
     lower = 0.01 * cf.to(my.Uunit)
-    upper = 10 * cf.to(my.Uunit)
+    upper = 10. * cf.to(my.Uunit)
 
     # Initial magnitudes of the velocities.
     v_kpc = np.geomspace(lower.value, upper.value, v_points)
@@ -57,18 +57,18 @@ def EOMs(s, y):
     signs = np.zeros(3)
     for i, (pos, vel) in enumerate(zip(x_i, u_i)):
         if pos > 0. and vel > 0.:
-            signs[i] = -1
+            signs[i] = -1.
         elif pos > 0. and vel < 0.:
-            signs[i] = -1
+            signs[i] = -1.
         elif pos < 0. and vel > 0.:
-            signs[i] = +1
+            signs[i] = +1.
         else:  # pos < 0. and vel < 0.
-            signs[i] = +1
+            signs[i] = +1.
 
     # Create dx/ds and du/ds, i.e. the r.h.s of the eqns. of motion. 
     u_i_kpc = u_i.to(my.Uunit).value
     dyds = CC.TIME_FLOW * np.array([
-        (1/(1+z))*u_i_kpc, signs * 1/((1+z)**3) * gradient
+        u_i_kpc, signs * 1./(1.+z)**2. * gradient
     ])
     
     dyds = np.reshape(dyds, (6,))
