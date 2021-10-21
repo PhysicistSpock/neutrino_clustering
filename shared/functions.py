@@ -238,11 +238,12 @@ def Fermi_Dirac(p, z_back):
 
     
     #NOTE: Temp. at z_back is higher than T_nu today.
-    T_zback_eV = my.T_nu_eV*(1+z_back)
+    # T_zback_eV = my.T_nu_eV*(1.+z_back)
+    T_zback_eV = my.T_nu_eV
 
     # Plug into Fermi-Dirac distribution 
     arg_of_exp = p/T_zback_eV
-    f_of_p = 1 / (np.exp(arg_of_exp.value) + 1)
+    f_of_p = 1. / (np.exp(arg_of_exp.value) + 1.)
 
     return f_of_p
 
@@ -265,7 +266,7 @@ def number_density(p0, p1, z_back):
     p0_sort, p1_sort = p0[order], p1[order]
 
     # precomputed factors
-    prefactor = g/(2*np.pi**2)
+    prefactor = g/(2.*np.pi**2)
     FDvals = Fermi_Dirac(p1_sort, z_back)  #! needs p in [eV]
 
     #NOTE: n ~ integral dp p**2 f(p), the units come from dp p**2, which have
@@ -273,7 +274,7 @@ def number_density(p0, p1, z_back):
     n = prefactor * np.trapz(p0_sort.value**2 * FDvals, p0_sort.value)
 
     # convert n from eV**3 (also by hc actually) to 1/cm**3
-    ev_by_hc_to_cm_neg1 = (1/const.h/const.c).to(1/unit.cm/unit.eV)
+    ev_by_hc_to_cm_neg1 = (1./const.h/const.c).to(1./unit.cm/unit.eV)
     n_cm3 = n * ev_by_hc_to_cm_neg1.value**3 / unit.cm**3
 
     return n_cm3
