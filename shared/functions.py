@@ -4,7 +4,7 @@ import shared.control_center as CC
 
 
 #
-### Utility functions.
+### Functions used in simulation.
 #
 
 def rho_NFW(r, rho_0, r_s):
@@ -138,6 +138,54 @@ def scale_radius(z, M_vir):
 
 
 #
+### Utility functions.
+#
+
+def velocity_limits_of_m_nu(lower, upper, m_sim_eV, mode='kpc/s'):
+    """Converts limits on p/T_nu to limits on velocity used in simulation."""
+
+    # Conversion factor for limits from [eV] to [m/s] based on m_sim_eV
+    m_sim_kg = m_sim_eV.to(unit.kg, unit.mass_energy())
+    cf = my.T_nu_eV.to(unit.J) / m_sim_kg / const.c
+
+    if mode == 'km/s':
+        low_v = lower * cf.to(unit.km/unit.s)
+        upp_v = upper * cf.to(unit.km/unit.s)
+    if mode == 'kpc/s':
+        low_v = lower * cf.to(my.Uunit)
+        upp_v = upper * cf.to(my.Uunit)       
+
+    return low_v, upp_v
+
+
+def u_to_p_eV(u_sim, m_sim_eV, m_target_eV):
+    """Converts velocity [kpc/s] (from simulation) to momentum [eV]
+    and ratio y=p/T_nu."""
+
+    # Conversions
+    m_sim_kg = m_sim_eV.to(unit.kg, unit.mass_energy())
+    u_sim_ms = (u_sim*unit.kpc/unit.s).to(unit.m/unit.s)
+
+    # Magnitude of velocity
+    if u_sim.ndim in (0,1):
+        mag_sim = np.sqrt(np.sum(u_sim_ms**2))
+    else:
+        mag_sim = np.sqrt(np.sum(u_sim_ms**2, axis=1))
+
+
+    # From u_sim to p_sim, [Joule] then [eV]
+    p_sim_eV = ((mag_sim * const.c * m_sim_kg).to(unit.J)).to(unit.eV)
+    
+    # From p_sim to p_target
+    p_target_eV = p_sim_eV * (m_target_eV/m_sim_eV).value
+
+    # p/T_nu ratio
+    y = p_target_eV / my.T_nu_eV
+
+    return p_target_eV, y
+
+
+#
 ### Main functions.
 #
 
@@ -181,53 +229,30 @@ def dPsi_dxi_NFW(x_i, z, rho_0, M_vir):
                with units of acceleration.
     """    
 
-    # compute values dependent on redshift
+    # Compute values dependent on redshift.
     r_vir = R_vir(z, M_vir)
     r_s = r_vir / c_vir(z, M_vir)
     
-    # distance from halo center with current coords. x_i
+    # Distance from halo center with current coords. x_i.
     r = np.sqrt(np.sum(x_i**2.))
     if r == 0.:
-        r = 0.01  # avoid singularity
-
-    ### This is for the whole expression as in eqn. (A.5) and using sympy
-    # region
-
-    # m = np.minimum(r0, r_vir)
-    # M = np.maximum(r0, r_vir)
-
-    # r = sympy.Symbol('r')
-
-    # prefactor = -4*np.pi*unit.G*rho_0*r_s**2
-    # term1 = np.log(1 + m/r_s) / (r/r_s)
-    # term2 = r_vir/M / (1 + r_vir/r_s)
-    # Psi = prefactor * (term1 - term2)
-
-    ## derivative w.r.t any axis x_i with chain rule
-    # dPsi_dxi = sympy.diff(Psi, r) * x_i / r0
-
-    ## fill in r values
-    # fill_in_r = sympy.lambdify(r, dPsi_dxi, 'numpy')
-    # derivative_vector = fill_in_r(r0)
-
-    # endregion
+        r = 1e-10  # avoid singularity
 
     m = np.minimum(r, r_vir)
 
-    #NOTE ratio has to be unitless, otherwise np.log yields 0.
-    ratio = m.value/r_s.value
+    #! Ratio has to be unitless, otherwise np.log yields 0.
+    ratio = (m/r_s).value
 
-    prefactor = -4.*np.pi*const.G*rho_0*r_s**2. * np.log(1.+(ratio)) * r_s
+    prefactor = -4.*np.pi*const.G*rho_0*r_s**2.*np.log(1.+(ratio))*r_s
     derivative = (-1.) * prefactor / r**2.
 
-    #! Take absolute value of position coord. x_i, we want only the magnitude
-    #! of the derivative. 
+    # Absolute value of strength of derivative at coord. x_i.
     derivative_vector = derivative * np.abs(x_i)/r
 
     return derivative_vector.to(unit.kpc/unit.s**2.)
 
 
-def Fermi_Dirac(p, z_back):
+def Fermi_Dirac(p):
     """Fermi-Dirac phase-space distribution for CNB neutrinos. 
     Zero chem. potential and temp. T_nu (CNB temp. today). 
 
@@ -240,7 +265,6 @@ def Fermi_Dirac(p, z_back):
 
     
     #NOTE: Temp. at z_back is higher than T_nu today.
-    # T_zback_eV = my.T_nu_eV*(1.+z_back)
     T_zback_eV = my.T_nu_eV
 
     # Plug into Fermi-Dirac distribution 
@@ -250,7 +274,7 @@ def Fermi_Dirac(p, z_back):
     return f_of_p
 
 
-def number_density(p0, p1, z_back):
+def number_density(p0, p1):
     """Neutrino number density obtained by integration over initial momenta.
 
     Args:
@@ -261,7 +285,7 @@ def number_density(p0, p1, z_back):
         array: Value of relic neutrino number density.
     """    
 
-    g = 1  #? 6 degrees of freedom: flavour and particle/anti-particle
+    g = 2.  #? 6 degrees of freedom: flavour and particle/anti-particle
     
     #NOTE: trapz integral method needs sorted (ascending) arrays
     order = p0.argsort()
@@ -269,7 +293,7 @@ def number_density(p0, p1, z_back):
 
     # precomputed factors
     prefactor = g/(2.*np.pi**2.)
-    FDvals = Fermi_Dirac(p1_sort, z_back)  #! needs p in [eV]
+    FDvals = Fermi_Dirac(p1_sort)  #! needs p in [eV]
 
     #NOTE: n ~ integral dp p**2 f(p), the units come from dp p**2, which have
     #NOTE: eV*3 = 1/eV**-3 ~ 1/length**3
