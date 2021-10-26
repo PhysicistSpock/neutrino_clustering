@@ -49,6 +49,8 @@ def EOMs(s, y):
     else:
         z = z_steps[0]
 
+    #! Turn off CDM halo grav. pot.
+    '''
     # Gradient value will always be positive.
     gradient = fct.dPsi_dxi_NFW(x_i, z, my.rho0_NFW, my.Mvir_NFW).value
 
@@ -64,12 +66,19 @@ def EOMs(s, y):
             signs[i] = +1.
         else:  # pos < 0. and vel < 0.
             signs[i] = +1.
+    '''
 
     # Create dx/ds and du/ds, i.e. the r.h.s of the eqns. of motion. 
     u_i_kpc = u_i.to(my.Uunit).value
+
+    #! Velocity doesn't change with no grav. pot.
     dyds = CC.TIME_FLOW * np.array([
-        u_i_kpc, signs * 1./(1.+z)**2. * gradient
+        u_i_kpc, np.zeros(3)
     ])
+
+    # dyds = CC.TIME_FLOW * np.array([
+    #     u_i_kpc, signs * 1./(1.+z)**2. * gradient
+    # ])
     
     dyds = np.reshape(dyds, (6,))
 
