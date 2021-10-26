@@ -257,7 +257,7 @@ def dPsi_dxi_NFW(x_i, z, rho_0, M_vir):
     return derivative_vector.to(unit.kpc/unit.s**2.)
 
 
-def Fermi_Dirac(p):
+def Fermi_Dirac(p, z):
     """Fermi-Dirac phase-space distribution for CNB neutrinos. 
     Zero chem. potential and temp. T_nu (CNB temp. today). 
 
@@ -269,13 +269,13 @@ def Fermi_Dirac(p):
     """
 
     # Plug into Fermi-Dirac distribution 
-    arg_of_exp = p/my.T_nu_eV
+    arg_of_exp = p/my.T_nu_eV#/(1.+z)
     f_of_p = 1. / (np.exp(arg_of_exp.value) + 1.)
 
     return f_of_p
 
 
-def number_density(p0, p1):
+def number_density(p0, p1, z):
     """Neutrino number density obtained by integration over initial momenta.
 
     Args:
@@ -294,11 +294,51 @@ def number_density(p0, p1):
 
     # precomputed factors
     prefactor = g/(2.*np.pi**2.)
-    FDvals = Fermi_Dirac(p1_sort)  #! needs p in [eV]
+    FDvals = Fermi_Dirac(p1_sort, z)  #! needs p in [eV]
 
     #NOTE: n ~ integral dp p**2 f(p), the units come from dp p**2, which have
     #NOTE: eV*3 = 1/eV**-3 ~ 1/length**3
     n = prefactor * np.trapz(p0_sort.value**2. * FDvals, p0_sort.value)
+
+    # convert n from eV**3 (also by hc actually) to 1/cm**3
+    ev_by_hc_to_cm_neg1 = (1./const.h/const.c).to(1./unit.cm/unit.eV)
+    n_cm3 = n * ev_by_hc_to_cm_neg1.value**3. / unit.cm**3.
+
+    return n_cm3
+
+
+def Fermi_Dirac_cart(px, py, pz):
+    
+    # Plug into Fermi-Dirac distribution 
+    arg_of_exp = np.sqrt((px**2+py**2+pz**2))/my.T_nu_eV
+    f_of_p = 1. / (np.exp(arg_of_exp.value) + 1.)
+
+    return f_of_p
+
+
+def number_density_cart(p0x, p0y, p0z, p1x, p1y, p1z):
+    
+    g = 1.  #? 6 degrees of freedom: flavour and particle/anti-particle
+    
+    #NOTE: trapz integral method needs sorted (ascending) arrays
+    o = p0x.argsort()
+    p0x, p0y, p0z = p0x[o], p0y[o], p0z[o]
+    p1x, p1y, p1z = p1x[o], p1y[o], p1z[o]
+
+    # precomputed factors
+    prefactor = g/(2.*np.pi**2.)
+    FDvals = Fermi_Dirac(p1x, p1y, p1z)  #! needs p in [eV]
+
+    # Fermi_Dirac function to integrate
+    
+
+    #NOTE: n ~ integral dp p**2 f(p), the units come from dp p**2, which have
+    #NOTE: eV*3 = 1/eV**-3 ~ 1/length**3
+    z_part = np.trapz(
+        1./(np.exp((np.sqrt(p0x**2+p0y**2+p0z**2)/my.T_nu_eV).value)+1.), 
+        p0x.value
+        )
+
 
     # convert n from eV**3 (also by hc actually) to 1/cm**3
     ev_by_hc_to_cm_neg1 = (1./const.h/const.c).to(1./unit.cm/unit.eV)
