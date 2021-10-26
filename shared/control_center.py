@@ -7,6 +7,7 @@ Vs = 100
 NR_OF_NEUTRINOS = PHIs*THETAs*Vs
 NU_MASS = 0.05*unit.eV
 NU_MASS_KG = NU_MASS.to(unit.kg, unit.mass_energy())
+N0 = 112  # standard neutrino number density in [1/cm**3]
 
 # Redshift integration parameters
 Z_START, Z_STOP, Z_AMOUNT = 0., 4., 100

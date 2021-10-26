@@ -37,20 +37,25 @@ def c_vir(z, M_vir):
         array: concentration parameters at each given redshift [dimensionless]
     """
     
-    # Functions from Mertsch et al. (2020)
-    a_of_z = 0.537 + (1.025-0.537)*np.exp(-0.718*np.power(z, 1.08))
-    b_of_z = -0.097 + 0.025*z
+    def c_vir_avg(z, M_vir):
+        # Functions from Mertsch et al. (2020), eqns. (12) and (13) in ref. [40].
+        a_of_z = 0.537 + (0.488)*np.exp(-0.718*np.power(z, 1.08))
+        b_of_z = -0.097 + 0.024*z
 
-    log10_beta_c = a_of_z + \
-                   b_of_z*np.log10(M_vir / (1.e12 * my.h**-1. * unit.M_sun))
+        # Argument in log has to be dimensionless
+        arg_in_log = (M_vir / (1.e12 / my.h * unit.M_sun)).value
 
-    beta_c = np.power(log10_beta_c, 10.)
+        # Calculate avergae c_vir
+        c_vir_avg = np.power(a_of_z + b_of_z*np.log10(arg_in_log), 10.)
 
-    # beta factor calculated by using their values for scale and virial radius
-    # in Table 1.
-    beta = 333.5/19.9/beta_c
+        return c_vir_avg
 
-    c = beta_c*beta
+    # Beta is then obtained from c_vir_avg(0, M_vir) and c_vir(0, M_vir).
+    beta = (333.5/19.9) / c_vir_avg(0, M_vir)
+    # beta = 2.09
+    print(beta)
+
+    c = beta * c_vir_avg(z, M_vir)
 
     return c
 
@@ -85,7 +90,7 @@ def Omega_m(z):
         array: matter density parameter at redshift z [dimensionless]
     """    
 
-    Omega_m = (my.Omega_m0*(1.+z)**3.) / (1. + my.Omega_m0*((1.+z)**3. - 1.))
+    Omega_m = (my.Omega_m0*(1.+z)**3.)/(my.Omega_m0*(1.+z)**3.+my.Omega_L0)
 
     return np.float64(Omega_m)
 
@@ -263,12 +268,8 @@ def Fermi_Dirac(p):
         array: Value of Fermi-Dirac distr. at p.
     """
 
-    
-    #NOTE: Temp. at z_back is higher than T_nu today.
-    T_zback_eV = my.T_nu_eV
-
     # Plug into Fermi-Dirac distribution 
-    arg_of_exp = p/T_zback_eV
+    arg_of_exp = p/my.T_nu_eV
     f_of_p = 1. / (np.exp(arg_of_exp.value) + 1.)
 
     return f_of_p
