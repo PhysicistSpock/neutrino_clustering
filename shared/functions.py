@@ -164,8 +164,8 @@ def velocity_limits_of_m_nu(lower, upper, m_sim_eV, mode='kpc/s'):
 
 
 def u_to_p_eV(u_sim, m_sim_eV, m_target_eV):
-    """Converts velocity [kpc/s] (from simulation) to momentum [eV]
-    and ratio y=p/T_nu."""
+    """Converts velocities [kpc/s] (x,y,z from simulation) to 
+    magnitude of momentum [eV] and ratio y=p/T_nu."""
 
     # Conversions
     m_sim_kg = m_sim_eV.to(unit.kg, unit.mass_energy())
@@ -269,8 +269,17 @@ def Fermi_Dirac(p, z):
     """
 
     # Plug into Fermi-Dirac distribution 
-    arg_of_exp = p/my.T_nu_eV*(1.+z)
-    f_of_p = 1. / (np.exp(arg_of_exp.value) + 1.)
+    arg_of_exp = (p/my.T_nu_eV).value
+    f_of_p = expit(-arg_of_exp)
+
+    '''
+    if z == CC.ZEDS[-1]:
+        print(np.argwhere(p==0))
+
+    for fp in f_of_p:
+        if fp <= 0:
+            print('FDval <=0, should not happen')
+    '''
 
     return f_of_p
 
@@ -286,7 +295,7 @@ def number_density(p0, p1, z):
         array: Value of relic neutrino number density.
     """    
 
-    g = 1.  #? 6 degrees of freedom: flavour and particle/anti-particle
+    g = 2.  #? how many d.o.f
     
     #NOTE: trapz integral method needs sorted (ascending) arrays
     order = p0.argsort()
@@ -295,6 +304,7 @@ def number_density(p0, p1, z):
     # precomputed factors
     prefactor = g/(2.*np.pi**2.)
     FDvals = Fermi_Dirac(p1_sort, z)  #! needs p in [eV]
+
 
     #NOTE: n ~ integral dp p**2 f(p), the units come from dp p**2, which have
     #NOTE: eV*3 = 1/eV**-3 ~ 1/length**3
