@@ -94,7 +94,8 @@ def backtrack_1_neutrino(y0_Nr):
     y0, Nr = y0_Nr[0:-1], y0_Nr[-1]
 
     # Redshifts to integrate over.
-    zeds = np.geomspace(1e-10, CC.Z_STOP, CC.Z_AMOUNT)  # log
+    # zeds = np.geomspace(CC.Z_START_LOG, CC.Z_STOP, CC.Z_AMOUNT)  # log
+    zeds = CC.ZEDS
 
     # Solutions array with initial and final vector for 1 neutrino.
     sols = []

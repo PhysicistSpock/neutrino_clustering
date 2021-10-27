@@ -269,7 +269,7 @@ def Fermi_Dirac(p, z):
     """
 
     # Plug into Fermi-Dirac distribution 
-    arg_of_exp = p/my.T_nu_eV#/(1.+z)
+    arg_of_exp = p/my.T_nu_eV*(1.+z)
     f_of_p = 1. / (np.exp(arg_of_exp.value) + 1.)
 
     return f_of_p
@@ -298,7 +298,9 @@ def number_density(p0, p1, z):
 
     #NOTE: n ~ integral dp p**2 f(p), the units come from dp p**2, which have
     #NOTE: eV*3 = 1/eV**-3 ~ 1/length**3
-    n = prefactor * np.trapz(p0_sort.value**2. * FDvals, p0_sort.value)
+    y = p0_sort.value**2. * FDvals
+    x = p0_sort.value
+    n = prefactor * np.trapz(y, x)
 
     # convert n from eV**3 (also by hc actually) to 1/cm**3
     ev_by_hc_to_cm_neg1 = (1./const.h/const.c).to(1./unit.cm/unit.eV)
