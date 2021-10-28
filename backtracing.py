@@ -49,8 +49,6 @@ def EOMs(s, y):
     else:
         z = z_steps[0]
 
-    #! Turn off CDM halo grav. pot.
-    '''
     # Gradient value will always be positive.
     gradient = fct.dPsi_dxi_NFW(x_i, z, my.rho0_NFW, my.Mvir_NFW).value
 
@@ -66,19 +64,14 @@ def EOMs(s, y):
             signs[i] = +1.
         else:  # pos < 0. and vel < 0.
             signs[i] = +1.
-    '''
+    
 
     # Create dx/ds and du/ds, i.e. the r.h.s of the eqns. of motion. 
     u_i_kpc = u_i.to(my.Uunit).value
 
-    #! Velocity doesn't change with no grav. pot.
     dyds = CC.TIME_FLOW * np.array([
-        u_i_kpc, np.zeros(3)
+        u_i_kpc, signs * 1./(1.+z)**2. * gradient
     ])
-
-    # dyds = CC.TIME_FLOW * np.array([
-    #     u_i_kpc, signs * 1./(1.+z)**2. * gradient
-    # ])
     
     dyds = np.reshape(dyds, (6,))
 
@@ -94,7 +87,6 @@ def backtrack_1_neutrino(y0_Nr):
     y0, Nr = y0_Nr[0:-1], y0_Nr[-1]
 
     # Redshifts to integrate over.
-    # zeds = np.geomspace(CC.Z_START_LOG, CC.Z_STOP, CC.Z_AMOUNT)  # log
     zeds = CC.ZEDS
 
     # Solutions array with initial and final vector for 1 neutrino.
@@ -141,10 +133,6 @@ if __name__ == '__main__':
     
     # Combine vectors and append neutrino particle number.
     y0_Nr = np.array([np.concatenate((x0,ui[i],[i+1])) for i in range(nu_Nr)])
-
-
-    ### Test 1 Neutrino.
-    # backtrack_1_neutrino(y0_Nr[0])
 
     # Run simulation on multiple cores.
     Processes = 16
