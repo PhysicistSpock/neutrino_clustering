@@ -13,13 +13,13 @@ def draw_ui(phi_points, theta_points, v_points):
 
     # Limits on velocity.
     lower = 0.01 * cf.to(my.Uunit)
-    upper = 10 * cf.to(my.Uunit)
+    upper = 10. * cf.to(my.Uunit)
 
     # Initial magnitudes of the velocities.
     v_kpc = np.geomspace(lower.value, upper.value, v_points)
 
-    # Split up this magnitude into velocity components
-    #NOTE: done by using spher. coords. trafos, which act as "weights"
+    # Split up this magnitude into velocity components.
+    #NOTE: Fone by using spher. coords. trafos, which act as "weights".
 
     eps = 0.01  # shift in theta, so poles are not included
     ps = np.linspace(0., 2.*np.pi, phi_points)
@@ -49,6 +49,8 @@ def EOMs(s, y):
     else:
         z = z_steps[0]
 
+    #! Turn off CDM halo grav. pot.
+    '''
     # Gradient value will always be positive.
     gradient = fct.dPsi_dxi_NFW(x_i, z, my.rho0_NFW, my.Mvir_NFW).value
 
@@ -57,19 +59,26 @@ def EOMs(s, y):
     signs = np.zeros(3)
     for i, (pos, vel) in enumerate(zip(x_i, u_i)):
         if pos > 0. and vel > 0.:
-            signs[i] = -1
+            signs[i] = -1.
         elif pos > 0. and vel < 0.:
-            signs[i] = -1
+            signs[i] = -1.
         elif pos < 0. and vel > 0.:
-            signs[i] = +1
+            signs[i] = +1.
         else:  # pos < 0. and vel < 0.
-            signs[i] = +1
+            signs[i] = +1.
+    '''
 
     # Create dx/ds and du/ds, i.e. the r.h.s of the eqns. of motion. 
     u_i_kpc = u_i.to(my.Uunit).value
+
+    #! Velocity doesn't change with no grav. pot.
     dyds = CC.TIME_FLOW * np.array([
-        (1/(1+z))*u_i_kpc, signs * 1/((1+z)**3) * gradient
+        u_i_kpc, np.zeros(3)
     ])
+
+    # dyds = CC.TIME_FLOW * np.array([
+    #     u_i_kpc, signs * 1./(1.+z)**2. * gradient
+    # ])
     
     dyds = np.reshape(dyds, (6,))
 
@@ -85,7 +94,8 @@ def backtrack_1_neutrino(y0_Nr):
     y0, Nr = y0_Nr[0:-1], y0_Nr[-1]
 
     # Redshifts to integrate over.
-    zeds = np.geomspace(1e-10, CC.Z_STOP, CC.Z_AMOUNT)  # log
+    # zeds = np.geomspace(CC.Z_START_LOG, CC.Z_STOP, CC.Z_AMOUNT)  # log
+    zeds = CC.ZEDS
 
     # Solutions array with initial and final vector for 1 neutrino.
     sols = []
