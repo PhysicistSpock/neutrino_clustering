@@ -341,7 +341,7 @@ def number_density_cart(p0x, p0y, p0z, p1x, p1y, p1z):
         p0x.value
         )
 
-
+    n=0.
     # convert n from eV**3 (also by hc actually) to 1/cm**3
     ev_by_hc_to_cm_neg1 = (1./const.h/const.c).to(1./unit.cm/unit.eV)
     n_cm3 = n * ev_by_hc_to_cm_neg1.value**3. / unit.cm**3.
