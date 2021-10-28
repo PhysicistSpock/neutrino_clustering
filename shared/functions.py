@@ -269,7 +269,7 @@ def Fermi_Dirac(p, z):
     """
 
     # Plug into Fermi-Dirac distribution 
-    arg_of_exp = (p*(1.+z)/my.T_nu_eV).value
+    arg_of_exp = (p/my.T_nu_eV).value
     f_of_p = expit(-arg_of_exp)    
 
     return f_of_p
