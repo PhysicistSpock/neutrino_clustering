@@ -52,8 +52,6 @@ def c_vir(z, M_vir):
 
     # Beta is then obtained from c_vir_avg(0, M_vir) and c_vir(0, M_vir).
     beta = (333.5/19.9) / c_vir_avg(0, M_vir)
-    # beta = 2.09
-    print(beta)
 
     c = beta * c_vir_avg(z, M_vir)
 
