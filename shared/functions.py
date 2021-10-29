@@ -244,15 +244,20 @@ def dPsi_dxi_NFW(x_i, z, rho_0, M_vir):
         r = 1e-10  # avoid singularity
 
     m = np.minimum(r, r_vir)
+    M = np.maximum(r, r_vir)
 
-    #! Ratio has to be unitless, otherwise np.log yields 0.
-    ratio = (m/r_s).value
+    #! Ratios has to be unitless (e.g. else np.log yields 0.).
+    ratio1 = (m/r_s).value
+    ratio2 = (r/r_s).value
+    ratio3 = (r_vir/M).value
 
-    prefactor = -4.*np.pi*const.G*rho_0*r_s**2.*np.log(1.+(ratio))*r_s
-    derivative = (-1.) * prefactor / r**2.
-
-    # Absolute value of strength of derivative at coord. x_i.
-    derivative_vector = derivative * np.abs(x_i)/r
+    # Derivative in compact notation with m and M.
+    #? Formula from PhD thesis, derivation still to be done.
+    #NOTE: Take absolute value of coord. x_i., s.t. derivative is never < 0.
+    prefactor = 4.*np.pi*const.G*rho_0*r_s**2.*np.abs(x_i)/r**2.
+    term1 = np.log(1.+ratio1) / ratio2
+    term2 = ratio3 / (1.+ratio1)
+    derivative_vector = prefactor * (term1 - term2)
 
     return derivative_vector.to(unit.kpc/unit.s**2.)
 
