@@ -135,9 +135,12 @@ if __name__ == '__main__':
     y0_Nr = np.array([np.concatenate((x0,ui[i],[i+1])) for i in range(nu_Nr)])
 
     # Run simulation on multiple cores.
-    Processes = 16
+    Processes = 32
     with ProcessPoolExecutor(Processes) as ex:
         ex.map(backtrack_1_neutrino, y0_Nr)  
 
 
-    print('Execution time:', time.time()-start, 'seconds.')
+    seconds = time.time()-start
+    minutes = seconds/60.
+    hours = minutes/60.
+    print('Time sec/min/h: ', seconds, minutes, hours)
