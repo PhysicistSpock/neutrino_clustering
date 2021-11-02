@@ -291,64 +291,32 @@ def number_density(p0, p1, z):
         array: Value of relic neutrino number density.
     """    
 
-    g = 2.  #? how many d.o.f
+    g = 2.  # 2 degrees of freedom, 
     
     #NOTE: trapz integral method needs sorted (ascending) arrays
     ind = p0.argsort()
     p0_sort, p1_sort = p0[ind], p1[ind]
 
-    # precomputed factors
-    prefactor = g/(2.*np.pi**2.)
+    # Fermi-Dirac value with momentum at end of sim.
     FDvals = Fermi_Dirac(p1_sort, z)  #! needs p in [eV]
 
-    #NOTE: n ~ integral dp p**2 f(p), the units come from dp p**2, which have
-    #NOTE: eV*3 = 1/eV**-3 ~ 1/length**3
-    y = p0_sort.value**2. * FDvals
-    x = p0_sort.value
-    n = prefactor * np.trapz(y, x)
-
-    # convert n from eV**3 (also by hc actually) to 1/cm**3
-    ev_by_hc_to_cm_neg1 = (1./const.h/const.c).to(1./unit.cm/unit.eV)
-    n_cm3 = n * ev_by_hc_to_cm_neg1.value**3. / unit.cm**3.
-
-    return n_cm3
-
-
-def Fermi_Dirac_cart(px, py, pz):
+    # Convert initial momentum p0 from [eV] to [kg*m/s]
+    p0_SI = (p0_sort.to(unit.J) / const.c).to(unit.kg*unit.m/unit.s)
     
-    # Plug into Fermi-Dirac distribution 
-    arg_of_exp = np.sqrt((px**2+py**2+pz**2))/my.T_nu_eV
-    f_of_p = 1. / (np.exp(arg_of_exp.value) + 1.)
+    # Calculate number density.
+    y = p0_SI.value**2. * FDvals
+    x = p0_SI.value
+    n_raw = np.trapz(y, x)
 
-    return f_of_p
+    # Reintroduce "invisible" planck constant h to get 1/m**3
+    #NOTE: leftover constants are g*4*np.pi
+    n_m3 = n_raw / const.h.value**3 * g*4*np.pi
 
+    # To 1/cm**3
+    n_cm3 = (n_m3/unit.m**3).to(1/unit.cm**3)
 
-def number_density_cart(p0x, p0y, p0z, p1x, p1y, p1z):
-    
-    g = 1.  #? 6 degrees of freedom: flavour and particle/anti-particle
-    
-    #NOTE: trapz integral method needs sorted (ascending) arrays
-    o = p0x.argsort()
-    p0x, p0y, p0z = p0x[o], p0y[o], p0z[o]
-    p1x, p1y, p1z = p1x[o], p1y[o], p1z[o]
-
-    # precomputed factors
-    prefactor = g/(2.*np.pi**2.)
-    FDvals = Fermi_Dirac(p1x, p1y, p1z)  #! needs p in [eV]
-
-    # Fermi_Dirac function to integrate
-    
-
-    #NOTE: n ~ integral dp p**2 f(p), the units come from dp p**2, which have
-    #NOTE: eV*3 = 1/eV**-3 ~ 1/length**3
-    z_part = np.trapz(
-        1./(np.exp((np.sqrt(p0x**2+p0y**2+p0z**2)/my.T_nu_eV).value)+1.), 
-        p0x.value
-        )
-
-    n=0.
-    # convert n from eV**3 (also by hc actually) to 1/cm**3
-    ev_by_hc_to_cm_neg1 = (1./const.h/const.c).to(1./unit.cm/unit.eV)
-    n_cm3 = n * ev_by_hc_to_cm_neg1.value**3. / unit.cm**3.
+    # # convert n from eV**3 (also by hc actually) to 1/cm**3
+    # ev_by_hc_to_cm_neg1 = (1./const.h/const.c).to(1./unit.cm/unit.eV)
+    # n_cm3 = n * ev_by_hc_to_cm_neg1.value**3. / unit.cm**3.
 
     return n_cm3
