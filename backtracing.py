@@ -12,8 +12,8 @@ def draw_ui(phi_points, theta_points, v_points):
     cf = my.T_nu_eV.to(unit.J) / CC.NU_MASS_KG / const.c
 
     # Limits on velocity.
-    lower = 0.01 * cf.to(my.Uunit)
-    upper = 10. * cf.to(my.Uunit)
+    lower = CC.LOWER * cf.to(my.Uunit)
+    upper = CC.UPPER * cf.to(my.Uunit)
 
     # Initial magnitudes of the velocities.
     v_kpc = np.geomspace(lower.value, upper.value, v_points)
