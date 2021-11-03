@@ -15,6 +15,9 @@ from astropy import constants as const
 import numba as nb  # jit, njit, vectorize
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 
+# gpu packages
+
+
 # symbolic integration
 import sympy as sympy
 
