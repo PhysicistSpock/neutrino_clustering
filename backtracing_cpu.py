@@ -42,12 +42,13 @@ def EOMs(s, y):
     x_i_vals, u_i_vals = np.reshape(y, (2,3))
     x_i, u_i = x_i_vals*my.Xunit, u_i_vals*my.Uunit
 
-    # Pick out redshift z according to current time s
-    #NOTE: for in between s_steps (done by solve_ivp) we take initial redshift
+    # Find z corresponding to s.
     if s in s_steps:
         z = z_steps[s_steps==s][0]
     else:
-        z = z_steps[0]
+        s_red = s_steps - s
+        f_red = UnivariateSpline(z_steps, s_red, s=0)
+        z = f_red.roots()[0]
 
     # Gradient value will always be positive.
     gradient = fct.dPsi_dxi_NFW(x_i, z, my.rho0_NFW, my.Mvir_NFW).value
@@ -81,35 +82,23 @@ def EOMs(s, y):
 def backtrack_1_neutrino(y0_Nr):
     """Simulate trajectory of 1 neutrino."""
 
-    global z_steps, s_steps, Nr  # so other functions can use these variables
+    global z_steps, s_steps  # so other functions can use these variables
 
     # Split input into initial vector and neutrino number.
     y0, Nr = y0_Nr[0:-1], y0_Nr[-1]
 
-    # Redshifts to integrate over.
-    zeds = CC.ZEDS
+    # Integration steps.
+    z_steps = CC.ZEDS
+    s_steps = np.array([fct.s_of_z(z) for z in z_steps])
 
-    # Solutions array with initial and final vector for 1 neutrino.
-    sols = []
-    sols.append(y0)  # save initial vector
+    # Solve all 6 EOMs.
+    sol = solve_ivp(
+        fun=EOMs, t_span=[s_steps[0], s_steps[-1]], t_eval=s_steps,
+        y0=y0, method=CC.SOLVER
+        )
+    #NOTE: output as raw numbers but in [kpc, kpc/s]
 
-    for zi in range(len(zeds)-1):
-
-        # Redshift and converted time variable s.
-        z0, z1 = zeds[zi], zeds[zi+1]
-        z_steps = np.array([z0, z1])
-        s_steps = np.array([fct.s_of_z(z0), fct.s_of_z(z1)])     
-
-        # Solve all 6 EOMs.
-        #NOTE: output as raw numbers but in [kpc, kpc/s]
-        sol = solve_ivp(fun=EOMs, t_span=s_steps, y0=y0, method=CC.SOLVER)
-
-        # Overwrite current vector with new one.
-        y0 = np.array([sol.y[0:3,-1], sol.y[3:6,-1]]).flatten()
-
-        sols.append(y0)  # save current vector
-
-    np.save(f'neutrino_vectors/nu_{int(Nr)}.npy', np.array(sols))
+    np.save(f'neutrino_vectors/nu_{int(Nr)}.npy', np.array(sol))
 
 
 if __name__ == '__main__':
@@ -134,11 +123,15 @@ if __name__ == '__main__':
     # Combine vectors and append neutrino particle number.
     y0_Nr = np.array([np.concatenate((x0,ui[i],[i+1])) for i in range(nu_Nr)])
 
+
+    backtrack_1_neutrino(y0_Nr[1])
+
+    '''
     # Run simulation on multiple cores.
     Processes = 32
     with ProcessPoolExecutor(Processes) as ex:
         ex.map(backtrack_1_neutrino, y0_Nr)  
-
+    '''
 
     seconds = time.time()-start
     minutes = seconds/60.
