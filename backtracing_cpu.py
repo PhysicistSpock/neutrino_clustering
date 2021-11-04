@@ -98,7 +98,7 @@ def backtrack_1_neutrino(y0_Nr):
         )
     #NOTE: output as raw numbers but in [kpc, kpc/s]
 
-    np.save(f'neutrino_vectors/nu_{int(Nr)}.npy', np.array(sol))
+    np.save(f'neutrino_vectors/nu_{int(Nr)}.npy', np.array(sol.y.T))
 
 
 if __name__ == '__main__':
@@ -124,14 +124,10 @@ if __name__ == '__main__':
     y0_Nr = np.array([np.concatenate((x0,ui[i],[i+1])) for i in range(nu_Nr)])
 
 
-    backtrack_1_neutrino(y0_Nr[1])
-
-    '''
     # Run simulation on multiple cores.
     Processes = 32
     with ProcessPoolExecutor(Processes) as ex:
         ex.map(backtrack_1_neutrino, y0_Nr)  
-    '''
 
     seconds = time.time()-start
     minutes = seconds/60.
