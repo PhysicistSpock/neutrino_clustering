@@ -77,6 +77,7 @@ def backtrack_1_neutrino(y0_Nr):
 
     # Split input into initial vector and neutrino number.
     y0, Nr = y0_Nr[0:-1], y0_Nr[-1]
+    print(y0[0:3], type(y0[3:6]))
     x_in = torch.Tensor([y0[0:3]])
     u_in = torch.Tensor([y0[3:6]])
     y_torch = torch.cat([x_in, u_in])
@@ -95,7 +96,7 @@ if __name__ == '__main__':
     # Integration steps.
     s_steps = np.array([fct.s_of_z(z) for z in CC.ZEDS])
     s_torch = torch.Tensor(s_steps)
-    s_to_z = interp1d(s_steps, CC.ZEDS, kind='linear', assume_sorted=True)
+    s_to_z = interp1d(s_steps, CC.ZEDS, kind='linear', fill_value='extrapolate')
 
     # Amount of neutrinos to simulate.
     nu_Nr = CC.NR_OF_NEUTRINOS
@@ -117,12 +118,12 @@ if __name__ == '__main__':
     y0_Nr = np.array([np.concatenate((x0,ui[i],[i+1])) for i in range(nu_Nr)])
 
     #! run 1 particle test
-    # backtrack_1_neutrino(y0_Nr[1])
+    backtrack_1_neutrino(y0_Nr[1])
 
     # Run simulation on multiple cores.
-    Processes = 32
-    with ProcessPoolExecutor(Processes) as ex:
-        ex.map(backtrack_1_neutrino, y0_Nr)  
+    # Processes = 32
+    # with ProcessPoolExecutor(Processes) as ex:
+    #     ex.map(backtrack_1_neutrino, y0_Nr)  
 
     seconds = time.time()-start
     minutes = seconds/60.
