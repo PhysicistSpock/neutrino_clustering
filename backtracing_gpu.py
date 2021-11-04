@@ -42,15 +42,11 @@ def EOMs(s, y):
     x_i, u_i = y[0]*my.Xunit, y[1]*my.Uunit #? correct slice of tensor
 
     # Find z corresponding to s.
-    if s in s_steps:
-        z = z_steps[s_steps==s][0]
+    s_val = s.item()
+    if s_val in s_steps:
+        z = z_steps[s_steps==s_val][0]
     else:
-        try:
-            s_red = s_steps - s.numpy()
-            f_red = UnivariateSpline(z_steps, s_red, s=0)
-            z = f_red.roots()[0]
-        except:
-            z=0.
+        z = np.interp(s_val, s_steps, z_steps)
 
     # Gradient value will always be positive.
     gradient = fct.dPsi_dxi_NFW(x_i, z, my.rho0_NFW, my.Mvir_NFW).value
@@ -85,7 +81,7 @@ def backtrack_1_neutrino(y0_Nr):
     y0, Nr = y0_Nr[0:-1], y0_Nr[-1]
     x_in = torch.Tensor([y0[0:3]])
     u_in = torch.Tensor([y0[3:6]])
-    y_in = torch.cat([x_in, u_in])
+    y_torch = torch.cat([x_in, u_in])
 
     # Integration steps.
     z_steps = CC.ZEDS
@@ -93,11 +89,12 @@ def backtrack_1_neutrino(y0_Nr):
     s_torch = torch.Tensor(s_steps)
 
     # Solve all 6 EOMs.
-    sol = odeint(func=EOMs, y0=y_in, t=s_torch).numpy()
-    print(sol.shape)
+    sol = odeint(func=EOMs, y0=y_torch, t=s_torch).numpy()
+    print(sol.shape, type(sol))
     #NOTE: output as raw numbers but in [kpc, kpc/s]
 
-    np.save(f'neutrino_vectors/nu_{int(Nr)}.npy', np.array(sol))
+    save = np.concatenate(sol[:,0], sol[:,1], axis=None)
+    np.save(f'neutrino_vectors/nu_{int(Nr)}.npy', save)
 
 
 if __name__ == '__main__':
@@ -123,12 +120,12 @@ if __name__ == '__main__':
     y0_Nr = np.array([np.concatenate((x0,ui[i],[i+1])) for i in range(nu_Nr)])
 
     #! run 1 particle test
-    backtrack_1_neutrino(y0_Nr[1])
+    # backtrack_1_neutrino(y0_Nr[1])
 
     # Run simulation on multiple cores.
-    # Processes = 32
-    # with ProcessPoolExecutor(Processes) as ex:
-    #     ex.map(backtrack_1_neutrino, y0_Nr)  
+    Processes = 32
+    with ProcessPoolExecutor(Processes) as ex:
+        ex.map(backtrack_1_neutrino, y0_Nr)  
 
     seconds = time.time()-start
     minutes = seconds/60.
