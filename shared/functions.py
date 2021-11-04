@@ -241,7 +241,7 @@ def dPsi_dxi_NFW(x_i, z, rho_0, M_vir):
     # Distance from halo center with current coords. x_i.
     r = np.sqrt(np.sum(x_i**2.))
     if r == 0.:
-        r = 1e-10  # avoid singularity
+        r = 1e-3  # avoid singularity
 
     m = np.minimum(r, r_vir)
     M = np.maximum(r, r_vir)
@@ -252,7 +252,6 @@ def dPsi_dxi_NFW(x_i, z, rho_0, M_vir):
     ratio3 = (r_vir/M).value
 
     # Derivative in compact notation with m and M.
-    #? Formula from PhD thesis, derivation still to be done.
     #NOTE: Take absolute value of coord. x_i., s.t. derivative is never < 0.
     prefactor = 4.*np.pi*const.G*rho_0*r_s**2.*np.abs(x_i)/r**2.
     term1 = np.log(1.+ratio1) / ratio2
@@ -291,7 +290,7 @@ def number_density(p0, p1, z):
         array: Value of relic neutrino number density.
     """    
 
-    g = 2.  # 2 degrees of freedom, 
+    g = 2.  #? 2 degrees of freedom, flavour and anti-particle/particle 
     
     #NOTE: trapz integral method needs sorted (ascending) arrays
     ind = p0.argsort()
@@ -314,9 +313,5 @@ def number_density(p0, p1, z):
 
     # To 1/cm**3
     n_cm3 = (n_m3/unit.m**3).to(1/unit.cm**3)
-
-    # # convert n from eV**3 (also by hc actually) to 1/cm**3
-    # ev_by_hc_to_cm_neg1 = (1./const.h/const.c).to(1./unit.cm/unit.eV)
-    # n_cm3 = n * ev_by_hc_to_cm_neg1.value**3. / unit.cm**3.
 
     return n_cm3
