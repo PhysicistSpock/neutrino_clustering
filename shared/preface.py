@@ -24,7 +24,7 @@ import sympy as sympy
 
 # scipy packages
 from scipy.integrate import solve_ivp, quad, simpson
-from scipy.interpolate import UnivariateSpline
+from scipy.interpolate import UnivariateSpline, interp1d
 from scipy.special import expit
 
 # plotting

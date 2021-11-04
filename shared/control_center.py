@@ -21,6 +21,3 @@ ZEDS = np.insert(zeds_pre, len(zeds_pre), 4.)
 
 # Control if simulation runs forwards (+1) or backwards (-1) in time. 
 TIME_FLOW = -1
-
-# Integration method
-SOLVER = 'LSODA'

@@ -44,9 +44,9 @@ def EOMs(s, y):
     # Find z corresponding to s.
     s_val = s.item()
     if s_val in s_steps:
-        z = z_steps[s_steps==s_val][0]
+        z = CC.ZEDS[s_steps==s_val][0]
     else:
-        z = np.interp(s_val, s_steps, z_steps)
+        z = s_to_z(s_val)
 
     # Gradient value will always be positive.
     gradient = fct.dPsi_dxi_NFW(x_i, z, my.rho0_NFW, my.Mvir_NFW).value
@@ -75,22 +75,14 @@ def EOMs(s, y):
 def backtrack_1_neutrino(y0_Nr):
     """Simulate trajectory of 1 neutrino."""
 
-    global z_steps, s_steps  # so other functions can use these variables
-
     # Split input into initial vector and neutrino number.
     y0, Nr = y0_Nr[0:-1], y0_Nr[-1]
     x_in = torch.Tensor([y0[0:3]])
     u_in = torch.Tensor([y0[3:6]])
     y_torch = torch.cat([x_in, u_in])
 
-    # Integration steps.
-    z_steps = CC.ZEDS
-    s_steps = np.array([fct.s_of_z(z) for z in z_steps])
-    s_torch = torch.Tensor(s_steps)
-
     # Solve all 6 EOMs.
     sol = odeint(func=EOMs, y0=y_torch, t=s_torch).numpy()
-    print(sol.shape, type(sol))
     #NOTE: output as raw numbers but in [kpc, kpc/s]
 
     save = np.concatenate(sol[:,0], sol[:,1], axis=None)
@@ -99,6 +91,11 @@ def backtrack_1_neutrino(y0_Nr):
 
 if __name__ == '__main__':
     start = time.time()
+
+    # Integration steps.
+    s_steps = np.array([fct.s_of_z(z) for z in CC.ZEDS])
+    s_torch = torch.Tensor(s_steps)
+    s_to_z = interp1d(s_steps, CC.ZEDS, kind='linear', assume_sorted=True)
 
     # Amount of neutrinos to simulate.
     nu_Nr = CC.NR_OF_NEUTRINOS
