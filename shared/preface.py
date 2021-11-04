@@ -16,7 +16,8 @@ import numba as nb  # jit, njit, vectorize
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 
 # gpu packages
-
+import torch
+from torchdiffeq import odeint
 
 # symbolic integration
 import sympy as sympy
