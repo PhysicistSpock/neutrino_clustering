@@ -38,17 +38,15 @@ def draw_ui(phi_points, theta_points, v_points):
 def EOMs(s, y):
     """Equations of motion for all x_i's and u_i's in terms of s."""
 
-    # initialize vector and attach astropy units
+    # Initialize vector and attach astropy units.
     x_i_vals, u_i_vals = np.reshape(y, (2,3))
     x_i, u_i = x_i_vals*my.Xunit, u_i_vals*my.Uunit
 
     # Find z corresponding to s.
     if s in s_steps:
-        z = z_steps[s_steps==s][0]
+        z = CC.ZEDS[s_steps==s][0]
     else:
-        s_red = s_steps - s
-        f_red = UnivariateSpline(z_steps, s_red, s=0)
-        z = f_red.roots()[0]
+        z = s_to_z(s)  # interpolation function defined below
 
     # Gradient value will always be positive.
     gradient = fct.dPsi_dxi_NFW(x_i, z, my.rho0_NFW, my.Mvir_NFW).value
@@ -82,14 +80,8 @@ def EOMs(s, y):
 def backtrack_1_neutrino(y0_Nr):
     """Simulate trajectory of 1 neutrino."""
 
-    global z_steps, s_steps  # so other functions can use these variables
-
     # Split input into initial vector and neutrino number.
     y0, Nr = y0_Nr[0:-1], y0_Nr[-1]
-
-    # Integration steps.
-    z_steps = CC.ZEDS
-    s_steps = np.array([fct.s_of_z(z) for z in z_steps])
 
     # Solve all 6 EOMs.
     sol = solve_ivp(
@@ -97,12 +89,18 @@ def backtrack_1_neutrino(y0_Nr):
         y0=y0, method=CC.SOLVER
         )
     #NOTE: output as raw numbers but in [kpc, kpc/s]
+    save = np.array(sol)
+    print(save.shape)
 
-    np.save(f'neutrino_vectors/nu_{int(Nr)}.npy', np.array(sol.y.T))
+    np.save(f'neutrino_vectors/nu_{int(Nr)}.npy', save)
 
 
 if __name__ == '__main__':
     start = time.time()
+
+    # Integration steps.
+    s_steps = np.array([fct.s_of_z(z) for z in CC.ZEDS])
+    s_to_z = interp1d(s_steps, CC.ZEDS, kind='linear', fill_value='extrapolate')
 
     # Amount of neutrinos to simulate.
     nu_Nr = CC.NR_OF_NEUTRINOS
@@ -123,11 +121,13 @@ if __name__ == '__main__':
     # Combine vectors and append neutrino particle number.
     y0_Nr = np.array([np.concatenate((x0,ui[i],[i+1])) for i in range(nu_Nr)])
 
+    #! run 1 particle test
+    # backtrack_1_neutrino(y0_Nr[1])
 
     # Run simulation on multiple cores.
-    Processes = 32
-    with ProcessPoolExecutor(Processes) as ex:
-        ex.map(backtrack_1_neutrino, y0_Nr)  
+    # Processes = 32
+    # with ProcessPoolExecutor(Processes) as ex:
+    #     ex.map(backtrack_1_neutrino, y0_Nr)  
 
     seconds = time.time()-start
     minutes = seconds/60.
