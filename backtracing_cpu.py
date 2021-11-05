@@ -71,7 +71,7 @@ def EOMs(s, y):
         u_i_kpc, signs * 1./(1.+z)**2. * gradient
     ])
 
-    return dyds
+    return np.reshape(dyds, (6,))
 
 
 def backtrack_1_neutrino(y0_Nr):
@@ -83,7 +83,7 @@ def backtrack_1_neutrino(y0_Nr):
     # Solve all 6 EOMs.
     sol = solve_ivp(
         fun=EOMs, t_span=[s_steps[0], s_steps[-1]], t_eval=s_steps,
-        y0=y0, method=CC.SOLVER, vectorized=True
+        y0=y0, method=CC.SOLVER, vectorized=False
         )
     
     #NOTE: output as raw numbers but in [kpc, kpc/s]
@@ -117,12 +117,12 @@ if __name__ == '__main__':
     y0_Nr = np.array([np.concatenate((x0,ui[i],[i+1])) for i in range(nu_Nr)])
 
     #! run 1 particle test
-    # backtrack_1_neutrino(y0_Nr[1])
+    backtrack_1_neutrino(y0_Nr[1])
 
     # Run simulation on multiple cores.
-    Processes = 8
-    with ProcessPoolExecutor(Processes) as ex:
-        ex.map(backtrack_1_neutrino, y0_Nr)  
+    # Processes = 8
+    # with ProcessPoolExecutor(Processes) as ex:
+    #     ex.map(backtrack_1_neutrino, y0_Nr)  
 
     seconds = time.time()-start
     minutes = seconds/60.
