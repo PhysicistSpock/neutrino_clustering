@@ -64,15 +64,12 @@ def EOMs(s, y):
         else:  # pos < 0. and vel < 0.
             signs[i] = +1.
     
-
     # Create dx/ds and du/ds, i.e. the r.h.s of the eqns. of motion. 
     u_i_kpc = u_i.to(my.Uunit).value
 
     dyds = CC.TIME_FLOW * np.array([
         u_i_kpc, signs * 1./(1.+z)**2. * gradient
     ])
-    
-    dyds = np.reshape(dyds, (6,))
 
     return dyds
 
@@ -86,13 +83,11 @@ def backtrack_1_neutrino(y0_Nr):
     # Solve all 6 EOMs.
     sol = solve_ivp(
         fun=EOMs, t_span=[s_steps[0], s_steps[-1]], t_eval=s_steps,
-        y0=y0, method=CC.SOLVER
+        y0=y0, method=CC.SOLVER, vectorized=True
         )
+    
     #NOTE: output as raw numbers but in [kpc, kpc/s]
-    save = np.array(sol)
-    print(save.shape)
-
-    np.save(f'neutrino_vectors/nu_{int(Nr)}.npy', save)
+    np.save(f'neutrino_vectors/nu_{int(Nr)}.npy', np.array(sol.y.T))
 
 
 if __name__ == '__main__':
@@ -125,9 +120,9 @@ if __name__ == '__main__':
     # backtrack_1_neutrino(y0_Nr[1])
 
     # Run simulation on multiple cores.
-    # Processes = 32
-    # with ProcessPoolExecutor(Processes) as ex:
-    #     ex.map(backtrack_1_neutrino, y0_Nr)  
+    Processes = 8
+    with ProcessPoolExecutor(Processes) as ex:
+        ex.map(backtrack_1_neutrino, y0_Nr)  
 
     seconds = time.time()-start
     minutes = seconds/60.

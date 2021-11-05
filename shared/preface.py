@@ -14,6 +14,7 @@ from astropy import constants as const
 # speed improvement
 import numba as nb  # jit, njit, vectorize
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
+from functools import lru_cache
 
 # gpu packages
 import torch
