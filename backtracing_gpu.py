@@ -38,7 +38,7 @@ def draw_ui(phi_points, theta_points, v_points):
 def EOMs(s, y):
     """Equations of motion for all x_i's and u_i's in terms of s."""
 
-    # initialize vector and attach astropy units
+    # Initialize vector and attach astropy units.
     x_i, u_i = y[0]*my.Xunit, y[1]*my.Uunit #? correct slice of tensor
 
     # Find z corresponding to s.
@@ -46,7 +46,7 @@ def EOMs(s, y):
     if s_val in s_steps:
         z = CC.ZEDS[s_steps==s_val][0]
     else:
-        z = s_to_z(s_val)
+        z = s_to_z(s_val)  # interpolation function defined below
 
     # Gradient value will always be positive.
     gradient = fct.dPsi_dxi_NFW(x_i, z, my.rho0_NFW, my.Mvir_NFW).value
