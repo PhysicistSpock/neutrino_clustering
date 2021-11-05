@@ -15,6 +15,7 @@ from astropy import constants as const
 import numba as nb  # jit, njit, vectorize
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 from functools import lru_cache
+from shared.numpy_lru_cache_decorator import np_cache
 
 # gpu packages
 import torch
