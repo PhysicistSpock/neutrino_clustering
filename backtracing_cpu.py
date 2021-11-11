@@ -1,4 +1,3 @@
-from matplotlib.pyplot import draw
 from shared.preface import *
 import shared.my_units as my
 import shared.functions as fct

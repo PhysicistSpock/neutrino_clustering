@@ -140,6 +140,20 @@ def scale_radius(z, M_vir):
     return r_s.to(unit.kpc)
 
 
+@nb.njit
+def c_vir_avg(z, M_vir):
+    # Functions from Mertsch et al. (2020), eqns. (12) and (13) in ref. [40].
+    a_of_z = 0.537 + (0.488)*np.exp(-0.718*np.power(z, 1.08))
+    b_of_z = -0.097 + 0.024*z
+
+    # Argument in log has to be dimensionless
+    arg_in_log = (M_vir / (1.e12 / my.h))
+
+    # Calculate avergae c_vir
+    c_vir_avg = np.power(a_of_z + b_of_z*np.log10(arg_in_log), 10.)
+
+    return c_vir_avg
+
 #
 ### Utility functions.
 #
