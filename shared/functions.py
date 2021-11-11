@@ -190,6 +190,17 @@ def u_to_p_eV(u_sim, m_sim_eV, m_target_eV):
     return p_target_eV, y
 
 
+def y_fmt(value, tick_number):
+    if value == 1e-2:
+        return r'1+$10^{-2}$'
+    elif value == 1e-1:
+        return r'1+$10^{-1}$'
+    elif value == 1e0:
+        return r'1+$10^0$'
+    elif value == 1e1:
+        return r'1+$10^1$'
+
+
 #
 ### Main functions.
 #
