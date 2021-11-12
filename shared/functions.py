@@ -7,6 +7,7 @@ import shared.control_center as CC
 ### Functions used in simulation.
 #
 
+# @nb.njit
 def rho_NFW(r, rho_0, r_s):
     """NFW density profile.
 
@@ -24,6 +25,22 @@ def rho_NFW(r, rho_0, r_s):
     return rho.to(unit.M_sun/unit.kpc**3.)
 
 
+# @nb.njit
+def c_vir_avg(z, M_vir):
+    # Functions from Mertsch et al. (2020), eqns. (12) and (13) in ref. [40].
+    a_of_z = 0.537 + (0.488)*np.exp(-0.718*np.power(z, 1.08))
+    b_of_z = -0.097 + 0.024*z
+
+    # Argument in log has to be dimensionless
+    arg_in_log = (M_vir / (1.e12 / my.h / unit.Msun)).value
+
+    # Calculate avergae c_vir
+    c_vir_avg = np.power(a_of_z + b_of_z*np.log10(arg_in_log), 10.)
+
+    return c_vir_avg
+    
+
+# @nb.njit
 def c_vir(z, M_vir):
     """Concentration parameter defined as r_vir/r_s, i.e. the ratio of virial 
     radius to the scale radius of the halo according to eqn. 5.5 of 
@@ -36,19 +53,6 @@ def c_vir(z, M_vir):
     Returns:
         array: concentration parameters at each given redshift [dimensionless]
     """
-    
-    def c_vir_avg(z, M_vir):
-        # Functions from Mertsch et al. (2020), eqns. (12) and (13) in ref. [40].
-        a_of_z = 0.537 + (0.488)*np.exp(-0.718*np.power(z, 1.08))
-        b_of_z = -0.097 + 0.024*z
-
-        # Argument in log has to be dimensionless
-        arg_in_log = (M_vir / (1.e12 / my.h * unit.M_sun)).value
-
-        # Calculate avergae c_vir
-        c_vir_avg = np.power(a_of_z + b_of_z*np.log10(arg_in_log), 10.)
-
-        return c_vir_avg
 
     # Beta is then obtained from c_vir_avg(0, M_vir) and c_vir(0, M_vir).
     beta = (333.5/19.9) / c_vir_avg(0, M_vir)
@@ -58,6 +62,7 @@ def c_vir(z, M_vir):
     return c
 
 
+# @nb.njit
 def rho_crit(z):
     """Critical density of the universe as a function of redshift, assuming
     matter domination, only Omega_m and Omega_Lambda in Friedmann equation. See 
@@ -76,6 +81,7 @@ def rho_crit(z):
     return rho_crit.to(unit.M_sun/unit.kpc**3.)
 
 
+# @nb.njit
 def Omega_m(z):
     """Matter density parameter as a function of redshift, assuming matter
     domination, only Omega_m and Omega_Lambda in Friedmann equation. See notes
@@ -93,6 +99,7 @@ def Omega_m(z):
     return np.float64(Omega_m)
 
 
+# @nb.njit
 def Delta_vir(z):
     """Function as needed for their eqn. (5.7).
 
@@ -108,6 +115,7 @@ def Delta_vir(z):
     return Delta_vir
 
 
+# @nb.njit
 def R_vir(z, M_vir):
     """Virial radius according to eqn. 5.7 in Mertsch et al. (2020).
 
@@ -124,6 +132,7 @@ def R_vir(z, M_vir):
     return R_vir.to(unit.kpc)
 
 
+# @nb.njit
 def scale_radius(z, M_vir):
     """Scale radius of NFW halo.
 
@@ -139,20 +148,6 @@ def scale_radius(z, M_vir):
 
     return r_s.to(unit.kpc)
 
-
-@nb.njit
-def c_vir_avg(z, M_vir):
-    # Functions from Mertsch et al. (2020), eqns. (12) and (13) in ref. [40].
-    a_of_z = 0.537 + (0.488)*np.exp(-0.718*np.power(z, 1.08))
-    b_of_z = -0.097 + 0.024*z
-
-    # Argument in log has to be dimensionless
-    arg_in_log = (M_vir / (1.e12 / my.h))
-
-    # Calculate avergae c_vir
-    c_vir_avg = np.power(a_of_z + b_of_z*np.log10(arg_in_log), 10.)
-
-    return c_vir_avg
 
 #
 ### Utility functions.
@@ -245,6 +240,7 @@ def s_of_z(z):
     return np.float64(s_of_z)
 
 
+# @nb.njit
 def dPsi_dxi_NFW(x_i, z, rho_0, M_vir):
     """Derivative of NFW grav. potential w.r.t. any axis x_i.
 
