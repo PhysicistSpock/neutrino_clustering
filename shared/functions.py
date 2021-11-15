@@ -96,7 +96,7 @@ def Omega_m(z):
 
     Omega_m = (my.Omega_m0*(1.+z)**3.)/(my.Omega_m0*(1.+z)**3.+my.Omega_L0)
 
-    return np.float64(Omega_m)
+    return Omega_m
 
 
 @nb.njit
