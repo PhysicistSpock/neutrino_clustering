@@ -1,8 +1,8 @@
 from shared.preface import *
 
 
-PHIs = 10
-THETAs = 10
+PHIs = 20
+THETAs = 20
 Vs = 100
 NR_OF_NEUTRINOS = PHIs*THETAs*Vs
 
@@ -14,10 +14,17 @@ NU_MASS_KG = NU_MASS.to(unit.kg, unit.mass_energy())
 N0 = 112  # standard neutrino number density in [1/cm**3]
 
 # Redshift integration parameters
-Z_START, Z_STOP, Z_AMOUNT = 0., 4., 199
-Z_START_LOG = 1e-1
-zeds_pre = np.geomspace(Z_START_LOG, Z_STOP, Z_AMOUNT) - Z_START_LOG
-ZEDS = np.insert(zeds_pre, len(zeds_pre), 4.)
+
+#! OLD, logspaced
+# Z_START, Z_STOP, Z_AMOUNT = 0., 4., 199
+# Z_START_LOG = 1e-1
+# zeds_pre = np.geomspace(Z_START_LOG, Z_STOP, Z_AMOUNT) - Z_START_LOG
+# ZEDS = np.insert(zeds_pre, len(zeds_pre), 4.)
+
+#! NEW, linear spaced, denser for late times (closer to today)
+z_late = np.linspace(0,2,200)
+z_early = np.linspace(2,4,100)
+ZEDS = np.concatenate((z_late, z_early))
 
 # Control if simulation runs forwards (+1) or backwards (-1) in time. 
 TIME_FLOW = -1
