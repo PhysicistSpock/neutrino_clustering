@@ -40,7 +40,8 @@ def EOMs(s, y):
 
     # Initialize vector and attach astropy units.
     x_i_vals, u_i_vals = np.reshape(y, (2,3))
-    x_i, u_i = x_i_vals*my.Xunit, u_i_vals*my.Uunit
+    x_i = x_i_vals #*my.Xunit
+    u_i = u_i_vals #*my.Uunit
 
     # Find z corresponding to s.
     if s in s_steps:
@@ -49,7 +50,7 @@ def EOMs(s, y):
         z = s_to_z(s)  # interpolation function defined below
 
     # Gradient value will always be positive.
-    gradient = fct.dPsi_dxi_NFW(x_i, z, my.rho0_NFW, my.Mvir_NFW).value
+    gradient = fct.dPsi_dxi_NFW(x_i, z, my.rho0_NFW, my.Mvir_NFW) #.value
 
     #NOTE: Velocity has to change according to the pointing direction,
     #NOTE: treat all 4 cases seperately.
@@ -65,10 +66,9 @@ def EOMs(s, y):
             signs[i] = +1.
     
     # Create dx/ds and du/ds, i.e. the r.h.s of the eqns. of motion. 
-    u_i_kpc = u_i.to(my.Uunit).value
 
     dyds = CC.TIME_FLOW * np.array([
-        u_i_kpc, signs * 1./(1.+z)**2. * gradient
+        u_i, signs * 1./(1.+z)**2. * gradient
     ])
 
     return dyds
@@ -117,12 +117,12 @@ if __name__ == '__main__':
     y0_Nr = np.array([np.concatenate((x0,ui[i],[i+1])) for i in range(nu_Nr)])
 
 
-    backtrack_1_neutrino(y0_Nr[1])
+    # backtrack_1_neutrino(y0_Nr[1])
 
     # Run simulation on multiple cores.
-    # Processes = 32
-    # with ProcessPoolExecutor(Processes) as ex:
-    #     ex.map(backtrack_1_neutrino, y0_Nr)  
+    Processes = 32
+    with ProcessPoolExecutor(Processes) as ex:
+        ex.map(backtrack_1_neutrino, y0_Nr)  
 
     seconds = time.time()-start
     minutes = seconds/60.

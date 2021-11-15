@@ -7,7 +7,6 @@ import shared.control_center as CC
 ### Functions used in simulation.
 #
 
-# @nb.njit
 def rho_NFW(r, rho_0, r_s):
     """NFW density profile.
 
@@ -25,14 +24,14 @@ def rho_NFW(r, rho_0, r_s):
     return rho.to(unit.M_sun/unit.kpc**3.)
 
 
-# @nb.njit
+@nb.njit
 def c_vir_avg(z, M_vir):
     # Functions from Mertsch et al. (2020), eqns. (12) and (13) in ref. [40].
     a_of_z = 0.537 + (0.488)*np.exp(-0.718*np.power(z, 1.08))
     b_of_z = -0.097 + 0.024*z
 
     # Argument in log has to be dimensionless
-    arg_in_log = (M_vir / (1.e12 / my.h / unit.Msun)).value
+    arg_in_log = (M_vir / (1.e12 / my.h))
 
     # Calculate avergae c_vir
     c_vir_avg = np.power(a_of_z + b_of_z*np.log10(arg_in_log), 10.)
@@ -40,7 +39,7 @@ def c_vir_avg(z, M_vir):
     return c_vir_avg
     
 
-# @nb.njit
+@nb.njit
 def c_vir(z, M_vir):
     """Concentration parameter defined as r_vir/r_s, i.e. the ratio of virial 
     radius to the scale radius of the halo according to eqn. 5.5 of 
@@ -62,7 +61,7 @@ def c_vir(z, M_vir):
     return c
 
 
-# @nb.njit
+@nb.njit
 def rho_crit(z):
     """Critical density of the universe as a function of redshift, assuming
     matter domination, only Omega_m and Omega_Lambda in Friedmann equation. See 
@@ -78,10 +77,11 @@ def rho_crit(z):
     H_squared = my.H0**2. * (my.Omega_m0*(1.+z)**3. + my.Omega_L0) 
     rho_crit = 3.*H_squared / (8.*np.pi*const.G)
 
-    return rho_crit.to(unit.M_sun/unit.kpc**3.)
+    # .to(unit.M_sun/unit.kpc**3.) invalid for numba, manual factor instead.
+    return rho_crit / 64439975278.849915 
 
 
-# @nb.njit
+@nb.njit
 def Omega_m(z):
     """Matter density parameter as a function of redshift, assuming matter
     domination, only Omega_m and Omega_Lambda in Friedmann equation. See notes
@@ -99,7 +99,7 @@ def Omega_m(z):
     return np.float64(Omega_m)
 
 
-# @nb.njit
+@nb.njit
 def Delta_vir(z):
     """Function as needed for their eqn. (5.7).
 
@@ -115,7 +115,7 @@ def Delta_vir(z):
     return Delta_vir
 
 
-# @nb.njit
+@nb.njit
 def R_vir(z, M_vir):
     """Virial radius according to eqn. 5.7 in Mertsch et al. (2020).
 
@@ -129,10 +129,10 @@ def R_vir(z, M_vir):
 
     R_vir = np.power(3.*M_vir / (4.*np.pi*Delta_vir(z)*rho_crit(z)), 1./3.)
 
-    return R_vir.to(unit.kpc)
+    return R_vir
 
 
-# @nb.njit
+@nb.njit
 def scale_radius(z, M_vir):
     """Scale radius of NFW halo.
 
@@ -146,7 +146,7 @@ def scale_radius(z, M_vir):
     
     r_s = R_vir(z, M_vir) / c_vir(z, M_vir)
 
-    return r_s.to(unit.kpc)
+    return r_s
 
 
 #
@@ -214,6 +214,7 @@ def y_fmt(value, tick_number):
 ### Main functions.
 #
 
+
 def s_of_z(z):
     """Convert redshift to time variable s with eqn. 4.1 in Mertsch et al.
     (2020), keeping only Omega_m0 and Omega_Lambda0 in the Hubble eqn. for H(z).
@@ -240,7 +241,7 @@ def s_of_z(z):
     return np.float64(s_of_z)
 
 
-# @nb.njit
+@nb.njit
 def dPsi_dxi_NFW(x_i, z, rho_0, M_vir):
     """Derivative of NFW grav. potential w.r.t. any axis x_i.
 
@@ -268,9 +269,9 @@ def dPsi_dxi_NFW(x_i, z, rho_0, M_vir):
     M = np.maximum(r, r_vir)
 
     #! Ratios has to be unitless (e.g. else np.log yields 0.).
-    ratio1 = (m/r_s).value
-    ratio2 = (r/r_s).value
-    ratio3 = (r_vir/M).value
+    ratio1 = (m/r_s)
+    ratio2 = (r/r_s)
+    ratio3 = (r_vir/M)
 
     # Derivative in compact notation with m and M.
     #NOTE: Take absolute value of coord. x_i., s.t. derivative is never < 0.
@@ -279,7 +280,8 @@ def dPsi_dxi_NFW(x_i, z, rho_0, M_vir):
     term2 = ratio3 / (1.+ratio1)
     derivative_vector = prefactor * (term1 - term2)
 
-    return derivative_vector.to(unit.kpc/unit.s**2.)
+    # .to(unit.kpc/unit.s**2.) invalid for numba, manual factor instead.
+    return derivative_vector / 1.4775620405992722e28 
 
 
 def Fermi_Dirac(p, z):

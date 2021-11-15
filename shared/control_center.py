@@ -1,9 +1,9 @@
 from shared.preface import *
 
 
-PHIs = 2
-THETAs = 2
-Vs = 2
+PHIs = 10
+THETAs = 10
+Vs = 100
 NR_OF_NEUTRINOS = PHIs*THETAs*Vs
 
 LOWER = 0.01
