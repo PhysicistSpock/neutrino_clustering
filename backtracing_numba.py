@@ -34,7 +34,6 @@ def draw_ui(phi_points, theta_points, v_points):
     return ui_array 
 
 
-# @nb.njit
 def EOMs(s, y):
     """Equations of motion for all x_i's and u_i's in terms of s."""
 
