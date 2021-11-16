@@ -23,7 +23,7 @@ N0 = 112  # standard neutrino number density in [1/cm**3]
 
 #! NEW, linear spaced, denser for late times (closer to today)
 z_late = np.linspace(0,2,200)
-z_early = np.linspace(2,4,100)
+z_early = np.linspace(2.01,4,100)
 ZEDS = np.concatenate((z_late, z_early))
 
 # Control if simulation runs forwards (+1) or backwards (-1) in time. 
