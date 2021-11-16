@@ -22,6 +22,9 @@ N0 = 112  # standard neutrino number density in [1/cm**3]
 # ZEDS = np.insert(zeds_pre, len(zeds_pre), 4.)
 
 #! NEW, linear spaced, denser for late times (closer to today)
+late_steps = 200
+early_steps = 100
+Z_START, Z_STOP, Z_AMOUNT = 0., 4., late_steps+early_steps
 z_late = np.linspace(0,2,200)
 z_early = np.linspace(2.01,4,100)
 ZEDS = np.concatenate((z_late, z_early))
