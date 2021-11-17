@@ -1,5 +1,4 @@
 from shared.preface import *
-#TEST
 
 PHIs = 20
 THETAs = 20
