@@ -4,8 +4,8 @@ import time
 
 # arrays and data packages
 import numpy as np
-import pandas as pd
 import re
+import h5py
 
 # astrophysics
 from astropy import units as unit
@@ -16,10 +16,6 @@ import numba as nb  # jit, njit, vectorize
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 from functools import lru_cache
 from shared.numpy_lru_cache_decorator import np_cache
-
-# gpu packages
-import torch
-from torchdiffeq import odeint
 
 # symbolic integration
 import sympy as sympy
