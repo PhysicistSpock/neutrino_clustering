@@ -172,7 +172,8 @@ def velocity_limits_of_m_nu(lower, upper, m_sim_eV, mode='kpc/s'):
 
 def u_to_p_eV(u_sim, m_sim_eV, m_target_eV):
     """Converts velocities [kpc/s] (x,y,z from simulation) to 
-    magnitude of momentum [eV] and ratio y=p/T_nu."""
+    magnitude of momentum [eV] and ratio y=p/T_nu, according to desired
+    target mass (and mass used in simulation)."""
 
     # Conversions
     m_sim_kg = m_sim_eV.to(unit.kg, unit.mass_energy())
@@ -187,13 +188,13 @@ def u_to_p_eV(u_sim, m_sim_eV, m_target_eV):
         mag_sim = np.sqrt(np.sum(u_sim_ms**2, axis=1))
 
 
-    # From u_sim to p_sim, [Joule] then [eV]
+    # From u_sim to p_sim; then from [Joule] to [eV].
     p_sim_eV = ((mag_sim * const.c * m_sim_kg).to(unit.J)).to(unit.eV)
     
-    # From p_sim to p_target
+    # From p_sim to p_target.
     p_target_eV = p_sim_eV * (m_target_eV/m_sim_eV).value
 
-    # p/T_nu ratio
+    # p/T_nu ratio.
     y = p_target_eV / my.T_nu_eV
 
     return p_target_eV, y
