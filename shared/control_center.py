@@ -1,7 +1,7 @@
 from shared.preface import *
 
 PHIs = 20
-THETAs = 20
+THETAs = 10
 Vs = 100
 NR_OF_NEUTRINOS = PHIs*THETAs*Vs
 
@@ -31,4 +31,4 @@ ZEDS = np.concatenate((z_late, z_early))
 # Control if simulation runs forwards (+1) or backwards (-1) in time. 
 TIME_FLOW = -1
 
-SOLVER = 'RK23'  #! run sim with 'RK45' like they did
+SOLVER = 'RK45'  #! run sim with 'RK45' like they did
