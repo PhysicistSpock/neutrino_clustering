@@ -195,7 +195,7 @@ def u_to_p_eV(u_sim, m_sim_eV, m_target_eV):
     p_target_eV = p_sim_eV * (m_target_eV/m_sim_eV).value
 
     # p/T_nu ratio.
-    y = p_target_eV / my.T_nu_eV
+    y = (p_target_eV/my.T_nu_eV).value
 
     return p_target_eV, y
 
@@ -297,7 +297,7 @@ def Fermi_Dirac(p, z):
     """
 
     # Plug into Fermi-Dirac distribution 
-    arg_of_exp = (p/my.T_nu_eV).value
+    arg_of_exp = (p/(my.T_nu_eV*(1.+z))).value
     f_of_p = expit(-arg_of_exp)    
 
     return f_of_p
