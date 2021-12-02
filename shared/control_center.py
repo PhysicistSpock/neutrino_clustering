@@ -1,14 +1,14 @@
 from shared.preface import *
 
-PHIs = 10
-THETAs = 10
-Vs = 100
+PHIs = 5
+THETAs = 5
+Vs = 10
 NR_OF_NEUTRINOS = PHIs*THETAs*Vs
 
 LOWER = 0.01
-UPPER = 100.
+UPPER = 10.
 
-NU_MASS = 0.05*unit.eV
+NU_MASS = 0.01*unit.eV
 NU_MASS_KG = NU_MASS.to(unit.kg, unit.mass_energy())
 N0 = 112  # standard neutrino number density in [1/cm**3]
 
