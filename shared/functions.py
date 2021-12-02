@@ -266,6 +266,8 @@ def dPsi_dxi_NFW(x_i, z, rho_0, M_vir):
     if r == 0.:
         r = 1e-3  # avoid singularity
 
+    #? Implement resolution floor
+
     m = np.minimum(r, r_vir)
     M = np.maximum(r, r_vir)
 
