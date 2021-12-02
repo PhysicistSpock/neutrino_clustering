@@ -6,7 +6,7 @@ Vs = 100
 NR_OF_NEUTRINOS = PHIs*THETAs*Vs
 
 LOWER = 0.01
-UPPER = 100.
+UPPER = 10.
 
 NU_MASS = 0.05*unit.eV
 NU_MASS_KG = NU_MASS.to(unit.kg, unit.mass_energy())

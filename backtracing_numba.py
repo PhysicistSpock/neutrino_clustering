@@ -39,15 +39,17 @@ def EOMs(s, y):
 
     # Initialize vector and attach astropy units.
     x_i_vals, u_i_vals = np.reshape(y, (2,3))
-    x_i = x_i_vals #*my.Xunit
+    # x_i = x_i_vals #*my.Xunit
     u_i = u_i_vals #*my.Uunit
 
+    '''
     # Find z corresponding to s.
     if s in s_steps:
         z = CC.ZEDS[s_steps==s][0]
     else:
         z = s_to_z(s)  # interpolation function defined below
 
+    
     # Gradient value will always be positive.
     gradient = fct.dPsi_dxi_NFW(x_i, z, my.rho0_NFW, my.Mvir_NFW) #.value
 
@@ -63,11 +65,17 @@ def EOMs(s, y):
             signs[i] = +1.
         else:  # pos < 0. and vel < 0.
             signs[i] = +1.
-    
+
     # Create dx/ds and du/ds, i.e. the r.h.s of the eqns. of motion. 
 
     dyds = CC.TIME_FLOW * np.array([
         u_i, signs * 1./(1.+z)**2. * gradient
+    ])
+    '''
+
+
+    dyds = CC.TIME_FLOW * np.array([
+        u_i, np.zeros(3)
     ])
 
     return dyds
