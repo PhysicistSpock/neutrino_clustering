@@ -285,7 +285,16 @@ def dPsi_dxi_NFW(x_i, z, rho_0, M_vir):
     return derivative_vector / 1.4775620405992722e28 
 
 
-def Fermi_Dirac(p, z):
+def load_u_sim():
+    # Load initial and final velocities of simulation.
+    Ns = np.arange(CC.NR_OF_NEUTRINOS, dtype=int)  # Nr. of neutrinos
+    sim = np.array([np.load(f'neutrino_vectors/nu_{Nr+1}.npy') for Nr in Ns])
+    u_all = sim[:,:,3:6]  # (10000, 100, 3) shape, ndim = 3
+
+    return u_all
+
+
+def Fermi_Dirac(p):
     """Fermi-Dirac phase-space distribution for CNB neutrinos. 
     Zero chem. potential and temp. T_nu (CNB temp. today). 
 
@@ -297,7 +306,7 @@ def Fermi_Dirac(p, z):
     """
 
     # Plug into Fermi-Dirac distribution 
-    arg_of_exp = (p/(my.T_nu_eV*(1.+z))).value
+    arg_of_exp = (p/(my.T_nu_eV)).value
     f_of_p = expit(-arg_of_exp)    
 
     return f_of_p
@@ -321,7 +330,7 @@ def number_density(p0, p1, z):
     p0_sort, p1_sort = p0[ind], p1[ind]
 
     # Fermi-Dirac value with momentum at end of sim.
-    FDvals = Fermi_Dirac(p1_sort, z)  #! needs p in [eV]
+    FDvals = Fermi_Dirac(p1_sort)  #! needs p in [eV]
 
     # Convert initial momentum p0 from [eV] to [kg*m/s]
     p0_SI = (p0_sort.to(unit.J) / const.c).to(unit.kg*unit.m/unit.s)
