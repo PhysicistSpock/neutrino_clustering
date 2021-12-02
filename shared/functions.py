@@ -312,7 +312,7 @@ def Fermi_Dirac(p):
     return f_of_p
 
 
-def number_density(p0, p1, z):
+def number_density(p0, p1):
     """Neutrino number density obtained by integration over initial momenta.
 
     Args:
