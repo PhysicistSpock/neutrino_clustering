@@ -265,7 +265,7 @@ def dPsi_dxi_NFW(x_i, z, rho_0, M_vir):
     r = np.sqrt(np.sum(x_i**2.))
     
     # Implement constant density core below certain radius.
-    R_core = r_vir 
+    R_core = r_vir / 100
     if r <= R_core:
         r = R_core
 
