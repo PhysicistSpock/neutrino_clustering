@@ -12,7 +12,7 @@ NU_MASS = 0.01*unit.eV
 NU_MASS_KG = NU_MASS.to(unit.kg, unit.mass_energy())
 N0 = 112  # standard neutrino number density in [1/cm**3]
 
-# Redshift integration parameters
+## Redshift integration parameters
 
 #NOTE: OLD, logspaced
 # Z_START, Z_STOP, Z_AMOUNT = 0., 4., 199
