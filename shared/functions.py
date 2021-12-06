@@ -250,6 +250,33 @@ def s_of_z(z):
     return np.float64(s_of_z)
 
 
+def grav_pot(x_i, z, rho_0, M_vir):
+
+    # Compute values dependent on redshift.
+    r_vir = R_vir(z, M_vir)
+    r_s = r_vir / c_vir(z, M_vir)
+    
+    # Distance from halo center with current coords. x_i.
+    r = np.sqrt(np.sum(x_i**2.))
+
+    m = np.minimum(r, r_vir)
+    M = np.maximum(r, r_vir)
+
+    #! Ratios has to be unitless (e.g. else np.log yields 0.).
+    ratio1 = (m/r_s)
+    ratio2 = (r/r_s)
+    ratio3 = (r_vir/M)
+    ratio4 = (r_vir/r_s)
+
+    # Gravitational potential in compact notation with m and M.
+    prefactor = -4.*np.pi*const.G*rho_0*r_s**2.
+    term1 = np.log(1.+ratio1) / ratio2
+    term2 = ratio3 / (1.+ratio4)
+    grav_pot = prefactor * (term1 - term2)
+
+    return grav_pot.to(unit.kpc**2/unit.s**2.)
+
+
 @nb.njit
 def dPsi_dxi_NFW(x_i, z, rho_0, M_vir):
     """Derivative of NFW grav. potential w.r.t. any axis x_i.
@@ -273,9 +300,9 @@ def dPsi_dxi_NFW(x_i, z, rho_0, M_vir):
     r = np.sqrt(np.sum(x_i**2.))
     
     # Implement constant density core below certain radius.
-    # R_core = r_vir / 100
-    # if r <= R_core:
-    #     r = R_core
+    R_core = r_vir
+    if r <= R_core:
+        r = R_core
 
     m = np.minimum(r, r_vir)
     M = np.maximum(r, r_vir)
