@@ -250,6 +250,7 @@ def s_of_z(z):
     return np.float64(s_of_z)
 
 
+@nb.njit
 def grav_pot(x_i, z, rho_0, M_vir):
 
     # Compute values dependent on redshift.
@@ -274,7 +275,21 @@ def grav_pot(x_i, z, rho_0, M_vir):
     term2 = ratio3 / (1.+ratio4)
     grav_pot = prefactor * (term1 - term2)
 
-    return grav_pot.to(unit.kpc**2/unit.s**2.)
+    # .to(unit.m**2/unit.s**2.) invalid for numba, manual factor instead.
+    return grav_pot * 64439975278.84992
+
+
+def escape_momentum(x_i, z, rho_0, M_vir, masses)
+
+    # Gravitational potential at position x_i.
+    grav = grav_pot(x_i, z, rho_0, M_vir)*unit.m**2/unit.s**2
+
+    # Escape momentum formula from Ringwald & Wong (2004).
+    p_esc = np.sqrt(2*np.abs(grav)) * masses.to(unit.kg, unit.mass_energy())
+    p_esc_eV = ((p_esc * const.c).to(unit.J)).to(unit.eV)
+    y_esc = (p_esc_eV/my.T_nu_eV).value
+
+    return p_esc_eV, y_esc
 
 
 @nb.njit
@@ -300,9 +315,9 @@ def dPsi_dxi_NFW(x_i, z, rho_0, M_vir):
     r = np.sqrt(np.sum(x_i**2.))
     
     # Implement constant density core below certain radius.
-    R_core = r_vir
-    if r <= R_core:
-        r = R_core
+    # R_core = r_vir
+    # if r <= R_core:
+    #     r = R_core
 
     m = np.minimum(r, r_vir)
     M = np.maximum(r, r_vir)
