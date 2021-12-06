@@ -170,13 +170,21 @@ def velocity_limits_of_m_nu(lower, upper, m_sim_eV, mode='kpc/s'):
     return low_v, upp_v
 
 
-def u_to_p_eV(u_sim, m_sim_eV, m_target_eV):
+def load_u_sim():
+    # Load initial and final velocities of simulation.
+    Ns = np.arange(CC.NR_OF_NEUTRINOS, dtype=int)  # Nr. of neutrinos
+    sim = np.array([np.load(f'neutrino_vectors/nu_{Nr+1}.npy') for Nr in Ns])
+    u_all = sim[:,:,3:6]  # (10000, 100, 3) shape, ndim = 3
+
+    return u_all
+
+
+def u_to_p_eV(u_sim, m_target_eV):
     """Converts velocities [kpc/s] (x,y,z from simulation) to 
     magnitude of momentum [eV] and ratio y=p/T_nu, according to desired
     target mass (and mass used in simulation)."""
 
     # Conversions
-    m_sim_kg = m_sim_eV.to(unit.kg, unit.mass_energy())
     u_sim_ms = (u_sim*unit.kpc/unit.s).to(unit.m/unit.s)
 
     # Magnitude of velocity
@@ -189,10 +197,10 @@ def u_to_p_eV(u_sim, m_sim_eV, m_target_eV):
 
 
     # From u_sim to p_sim; then from [Joule] to [eV].
-    p_sim_eV = ((mag_sim * const.c * m_sim_kg).to(unit.J)).to(unit.eV)
+    p_sim_eV = ((mag_sim * const.c * CC.NU_MASS_KG).to(unit.J)).to(unit.eV)
     
     # From p_sim to p_target.
-    p_target_eV = p_sim_eV * (m_target_eV/m_sim_eV).value
+    p_target_eV = p_sim_eV * (m_target_eV/CC.NU_MASS).value
 
     # p/T_nu ratio.
     y = (p_target_eV/my.T_nu_eV).value
@@ -288,15 +296,6 @@ def dPsi_dxi_NFW(x_i, z, rho_0, M_vir):
     return derivative_vector / 1.4775620405992722e28 
 
 
-def load_u_sim():
-    # Load initial and final velocities of simulation.
-    Ns = np.arange(CC.NR_OF_NEUTRINOS, dtype=int)  # Nr. of neutrinos
-    sim = np.array([np.load(f'neutrino_vectors/nu_{Nr+1}.npy') for Nr in Ns])
-    u_all = sim[:,:,3:6]  # (10000, 100, 3) shape, ndim = 3
-
-    return u_all
-
-
 def Fermi_Dirac(p):
     """Fermi-Dirac phase-space distribution for CNB neutrinos. 
     Zero chem. potential and temp. T_nu (CNB temp. today). 
@@ -326,7 +325,7 @@ def number_density(p0, p1):
         array: Value of relic neutrino number density.
     """    
 
-    g = 2.  #? 2 degrees of freedom, flavour and anti-particle/particle 
+    g = 2.  # 2 d.o.f.: flavour and anti-particle/particle 
     
     #NOTE: trapz integral method needs sorted (ascending) arrays
     ind = p0.argsort()
