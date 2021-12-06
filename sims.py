@@ -35,23 +35,21 @@ def analyse_halo(mass, pos):
     return density
 
 
-def read_data(which_halos,snap,folder,output_path,name,mass_select):
+def read_data(which_halos,name,mass_select):
 
     radial_bins = np.arange(0, 5, 0.1)
     radial_bins = 10**radial_bins
     centers = bin_centers(radial_bins) #kpc
 
-    with h5py.File(folder+"/snapshot_00%02i.hdf5"%snap) as hf:
-        a = hf["/Header"].attrs["Scale-factor"]
-        mass = hf['PartType1/Masses'][:] * 1e10 #Msun
-        pos = hf['PartType1/Coordinates'][:][:] * a
-        vel = hf['PartType1/Velocities'][:][:]
-        unit_length_in_cgs = hf["/Units"].attrs["Unit length in cgs (U_L)"]
-
     snaps = h5py.File('/home/fabian/ownCloud/sim_data/snapshot_0036.hdf5')
     group = h5py.File('/home/fabian/ownCloud/sim_data/subhalo_0036.catalog_groups')
     parts = h5py.File('/home/fabian/ownCloud/sim_data/subhalo_0036.catalog_particles')
     props = h5py.File('/home/fabian/ownCloud/sim_data/subhalo_0036.properties')
+
+    a = snaps["/Header"].attrs["Scale-factor"]
+    mass = snaps['PartType1/Masses'][:] * 1e10 #Msun
+    pos = snaps['PartType1/Coordinates'][:][:] * a
+
 
     m200c = props["Mass_200crit"][:] * 1e10
     m200c[m200c == 0] = 1
@@ -134,3 +132,20 @@ def read_data(which_halos,snap,folder,output_path,name,mass_select):
             np.savetxt(f'sim_data/Profile_subhalos_M{mass_select}_{name}.txt')
         else:
             np.savetxt(f'sim_data/Profile_halos_M{mass_select}_{name}.txt')
+
+
+if __name__ == '__main__':
+    
+    name = 'Test'
+
+    mass = 10
+    read_data("halos",name,mass)
+    read_data("subhalos",name,mass)
+
+    mass = 11
+    read_data("halos",name,mass)
+    read_data("subhalos",name,mass)
+
+    mass = 12
+    read_data("halos",name,mass)
+    read_data("subhalos",name,mass)
