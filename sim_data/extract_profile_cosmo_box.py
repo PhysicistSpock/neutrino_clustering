@@ -134,6 +134,12 @@ def read_data(which_halos,snap,folder,output_path,name,mass_select):
 
 if __name__ == '__main__':
     
+    
+    from utils import *
+
+    output_path = args.output
+    folder = args.directory
+    snapshot = args.snapsho
     from utils import *
 
     output_path = args.output
