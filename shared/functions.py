@@ -279,7 +279,7 @@ def grav_pot(x_i, z, rho_0, M_vir):
     return grav_pot * 64439975278.84992
 
 
-def escape_momentum(x_i, z, rho_0, M_vir, masses)
+def escape_momentum(x_i, z, rho_0, M_vir, masses):
 
     # Gravitational potential at position x_i.
     grav = grav_pot(x_i, z, rho_0, M_vir)*unit.m**2/unit.s**2
