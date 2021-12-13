@@ -6,19 +6,12 @@ import shared.control_center as CC
 
 def draw_ui(phi_points, theta_points, v_points):
     """Get initial velocities for the neutrinos."""
-    
-    # Conversion factor for limits.
-    cf = my.T_nu_eV.to(unit.J) / CC.NU_MASS_KG / const.c
 
-    # Limits on velocity.
-    lower = CC.LOWER * cf.to(my.Uunit)
-    upper = CC.UPPER * cf.to(my.Uunit)
+    # Load velocity range for sim.
+    v_kpc = fct.v_range_sim()
 
-    # Initial magnitudes of the velocities.
-    v_kpc = np.geomspace(lower.value, upper.value, v_points)
-
-    # Split up this magnitude into velocity components.
-    #NOTE: Fone by using spher. coords. trafos, which act as "weights".
+    # Split up magnitude into velocity components.
+    #NOTE: Done by using spher. coords. trafos, which act as "weights".
 
     eps = 0.01  # shift in theta, so poles are not included
     ps = np.linspace(0., 2.*np.pi, phi_points)

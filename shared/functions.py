@@ -153,7 +153,7 @@ def scale_radius(z, M_vir):
 ### Utility functions.
 #
 
-def velocity_limits_of_m_nu(lower, upper, m_sim_eV, mode='kpc/s'):
+def v_limits(lower, upper, m_sim_eV, mode='kpc/s'):
     """Converts limits on p/T_nu to limits on velocity used in simulation."""
 
     # Conversion factor for limits from [eV] to [m/s] based on m_sim_eV
@@ -168,6 +168,16 @@ def velocity_limits_of_m_nu(lower, upper, m_sim_eV, mode='kpc/s'):
         upp_v = upper * cf.to(my.Uunit)       
 
     return low_v, upp_v
+
+
+def v_range_sim():
+    """Construct velocity range to use in sim."""
+
+    _, v_upp = v_limits(CC.LOWER, CC.UPPER, CC.NU_MASS_LOW, 'kpc/s')
+    v_low, _ = v_limits(CC.LOWER, CC.UPPER, CC.NU_MASS_UPP, 'kpc/s')
+    v_kpc = np.geomspace(v_low.value, v_upp.value, CC.Vs)
+
+    return v_kpc
 
 
 def load_u_sim():
@@ -186,6 +196,7 @@ def u_to_p_eV(u_sim, m_target_eV):
 
     # Conversions
     u_sim_ms = (u_sim*unit.kpc/unit.s).to(unit.m/unit.s)
+    m_target_kg = m_target_eV.to(unit.kg, unit.mass_energy())
 
     # Magnitude of velocity
     if u_sim.ndim in (0,1):
@@ -196,12 +207,9 @@ def u_to_p_eV(u_sim, m_target_eV):
         mag_sim = np.sqrt(np.sum(u_sim_ms**2, axis=1))
 
 
-    # From u_sim to p_sim; then from [Joule] to [eV].
-    p_sim_eV = ((mag_sim * const.c * CC.NU_MASS_KG).to(unit.J)).to(unit.eV)
+    # From u_sim to p_target_eV.
+    p_target_eV = ((mag_sim * const.c * m_target_kg).to(unit.J)).to(unit.eV)
     
-    # From p_sim to p_target.
-    p_target_eV = p_sim_eV * (m_target_eV/CC.NU_MASS).value
-
     # p/T_nu ratio.
     y = (p_target_eV/my.T_nu_eV).value
 
