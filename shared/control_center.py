@@ -8,7 +8,7 @@ NR_OF_NEUTRINOS = PHIs*THETAs*Vs
 LOWER = 0.01
 UPPER = 10.
 
-NU_MASS = 0.01*unit.eV
+NU_MASS = 0.05*unit.eV
 NU_MASS_KG = NU_MASS.to(unit.kg, unit.mass_energy())
 N0 = 112  # standard neutrino number density in [1/cm**3]
 
@@ -31,4 +31,4 @@ ZEDS = np.concatenate((z_late, z_early))
 # Control if simulation runs forwards (+1) or backwards (-1) in time. 
 TIME_FLOW = -1
 
-SOLVER = 'RK45'  #! run sim with 'RK45' like they did
+SOLVER = 'RK23'  #! run sim with 'RK45' like they did
