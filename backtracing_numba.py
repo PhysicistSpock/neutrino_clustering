@@ -112,7 +112,12 @@ if __name__ == '__main__':
     # backtrack_1_neutrino(y0_Nr[1])
 
     # Run simulation on multiple cores.
-    Processes = 6
+    parser = argparse.ArgumentParser()
+    parser.add_argument('CPUs', help='Number of CPUs to use.')
+    args = parser.parse_args()
+
+    Processes = int(args.CPUs)
+    print(f'***Using {Processes} CPUs.***')
     with ProcessPoolExecutor(Processes) as ex:
         ex.map(backtrack_1_neutrino, y0_Nr)  
 
