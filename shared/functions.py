@@ -313,11 +313,6 @@ def dPsi_dxi_NFW(x_i, z, rho_0, M_vir):
     
     # Distance from halo center with current coords. x_i.
     r = np.sqrt(np.sum(x_i**2.))
-    
-    # Implement constant density core below certain radius.
-    # R_core = r_vir
-    # if r <= R_core:
-    #     r = R_core
 
     m = np.minimum(r, r_vir)
     M = np.maximum(r, r_vir)
