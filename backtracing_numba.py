@@ -118,6 +118,12 @@ if __name__ == '__main__':
 
     Processes = int(args.CPUs)
     print(f'***Using {Processes} CPUs.***')
+    print(
+        f'phi:{CC.PHIs} theta:{CC.THETAs} velocities:{CC.Vs}'
+        '\n'
+        f'=> {CC.NR_OF_NEUTRINOS} neutrinos'
+        )
+    
     with ProcessPoolExecutor(Processes) as ex:
         ex.map(backtrack_1_neutrino, y0_Nr)  
 
