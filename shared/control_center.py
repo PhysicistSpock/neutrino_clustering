@@ -6,7 +6,7 @@ Vs = 100
 NR_OF_NEUTRINOS = PHIs*THETAs*Vs
 
 LOWER = 0.01
-UPPER = 13.
+UPPER = 20.
 MOMENTA = np.geomspace(LOWER, UPPER, Vs)
 
 NU_MASS = 0.05*unit.eV
