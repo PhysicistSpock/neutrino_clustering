@@ -6,18 +6,6 @@ import shared.control_center as CC
 
 def draw_ui(phi_points, theta_points, v_points):
     """Get initial velocities for the neutrinos."""
-    
-    #! this might be wrong
-    # # Conversion factor for limits.
-    # cf = my.T_nu_eV.to(unit.J) / CC.NU_MASS_KG / const.c
-
-    # # Limits on velocity.
-    # lower = CC.LOWER * cf.to(my.Uunit)
-    # upper = CC.UPPER * cf.to(my.Uunit)
-
-    # # Initial magnitudes of the velocities.
-    # v_kpc = np.geomspace(lower.value, upper.value, v_points)
-    #! -------------------
 
     # Convert momenta to initial velocity magnitudes in [kpc/s].
     cf = my.T_nu_eV.to(unit.J) / CC.NU_MASS_KG / const.c
