@@ -28,4 +28,4 @@ ZEDS = np.concatenate((z_late, z_early))
 # Control if simulation runs forwards (+1) or backwards (-1) in time. 
 TIME_FLOW = -1
 
-SOLVER = 'RK23'
+SOLVER = 'RK45'
