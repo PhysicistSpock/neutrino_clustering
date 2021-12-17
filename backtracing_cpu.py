@@ -116,6 +116,9 @@ if __name__ == '__main__':
     # Combine vectors and append neutrino particle number.
     y0_Nr = np.array([np.concatenate((x0,ui[i],[i+1])) for i in range(nu_Nr)])
 
+    # Test 1 neutrino only
+    # backtrack_1_neutrino(y0_Nr[0])
+
     # Run simulation on multiple cores.
     Processes = 32
     with ProcessPoolExecutor(Processes) as ex:
