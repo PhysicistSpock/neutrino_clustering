@@ -125,7 +125,7 @@ if __name__ == '__main__':
         )
     
     with ProcessPoolExecutor(Processes) as ex:
-        ex.map(backtrack_1_neutrino, y0_Nr[37000:])
+        ex.map(backtrack_1_neutrino, y0_Nr)
 
     seconds = time.time()-start
     minutes = seconds/60.

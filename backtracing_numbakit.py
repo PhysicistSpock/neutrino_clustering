@@ -79,9 +79,13 @@ def backtrack_1_neutrino(y0_Nr):
     # Split input into initial vector and neutrino number.
     y0, Nr = y0_Nr[0:-1], y0_Nr[-1]
 
-    NEW_SOLVER = False
+    NEW_SOLVER = True
 
     if NEW_SOLVER:
+
+        if Nr==1:
+            print('***Using numba-kit solver***')
+
         # Migrating to numba-kit.
         sol = nbkode.RungeKutta23(EOMs, s_steps[0], y0)
         _, y = sol.run(s_steps)
@@ -90,6 +94,10 @@ def backtrack_1_neutrino(y0_Nr):
         np.save(f'neutrino_vectors/nu_{int(Nr)}.npy', np.array(y))
 
     else:
+
+        if Nr==1:
+            print('***Using scipy solver***')
+
         # Solve all 6 EOMs.
         sol = solve_ivp(
             fun=EOMs, t_span=[s_steps[0], s_steps[-1]], t_eval=s_steps,
@@ -132,7 +140,6 @@ if __name__ == '__main__':
     # Test 1 neutrino only.
     # backtrack_1_neutrino(y0_Nr[1])
 
-    
     # Run simulation on multiple cores.
     parser = argparse.ArgumentParser()
     parser.add_argument('CPUs', help='Number of CPUs to use.')
@@ -149,6 +156,8 @@ if __name__ == '__main__':
     with ProcessPoolExecutor(Processes) as ex:
         ex.map(backtrack_1_neutrino, y0_Nr)
     
+    # Create processes manually.
+
 
     seconds = time.time()-start
     minutes = seconds/60.
