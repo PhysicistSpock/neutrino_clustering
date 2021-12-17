@@ -1,15 +1,15 @@
 from shared.preface import *
 
-PHIs = 10
-THETAs = 10
-Vs = 100
+PHIs = 20
+THETAs = 20
+Vs = 150
 NR_OF_NEUTRINOS = PHIs*THETAs*Vs
 
 LOWER = 0.01
 UPPER = 10.
 
-NU_MASS_LOW = 1e-5*unit.eV
-NU_MASS_UPP = 1e-3*unit.eV
+NU_MASS_LOW = 0.01*unit.eV
+NU_MASS_UPP = 0.3*unit.eV
 
 NU_MASS_KG_LOW = NU_MASS_LOW.to(unit.kg, unit.mass_energy())
 NU_MASS_KG_UPP = NU_MASS_UPP.to(unit.kg, unit.mass_energy())
