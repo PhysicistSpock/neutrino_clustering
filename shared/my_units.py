@@ -8,6 +8,7 @@ T_nu_eV   = T_nu.to(unit.eV, unit.temperature_energy())
 Omega_m0  = 0.3111                     # Matter energy-density today
 Omega_L0  = 1. - Omega_m0               # Dark energy-density today
 Omega_r0  = 9.23640e-5                 # Radiation energy-density today
+#! THESE OMEGAS DON'T SUM TO 1.
 
 H_UNIT    = (unit.km/unit.s)/unit.Mpc
 H0        = 67.66*H_UNIT               # Hubble constant today
